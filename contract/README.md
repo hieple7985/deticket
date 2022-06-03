@@ -31,8 +31,6 @@ METADATA_URL=https://example.com/metadata
 To build and deploy the smart contract, you just need to run the command below:
 
 ```sh
-RPC_URL=https://rpc.ithacanet.teztnets.xyz \
-ACCOUNT_PRIVATE_KEY=YOUR_TEZOS_PRIVATE_KEY \
 make deploy 
 ```
 
