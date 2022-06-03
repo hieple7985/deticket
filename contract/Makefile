@@ -13,3 +13,6 @@ deploy: compile
 		--storage ./build/de_ticket_nft_tokens/step_000_cont_0_storage.tz \
 		--rpc ${RPC_URL} \
 		--private-key=${ACCOUNT_PRIVATE_KEY}
+
+test:
+	~/smartpy-cli/SmartPy.sh test ./src/deticket.py .test_out
