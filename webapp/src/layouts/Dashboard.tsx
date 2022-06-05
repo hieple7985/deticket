@@ -24,7 +24,7 @@
   }
   ```
 */
-import { Fragment, useState } from "react";
+import React, { FC, Fragment, useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import {
   CollectionIcon,
@@ -34,6 +34,9 @@ import {
 } from "@heroicons/react/outline";
 import classNames from "classnames";
 import Identicon from 'identicon.js'
+import { useBeaconWallet, useWallet, useDappClient } from "@tezos-contrib/react-wallet-provider";
+import { getShortAddress } from "../utils/wallet";
+import { useTezos } from "../hooks/useTezos";
 
 const navigation = [
   // { name: 'All Issues', href: '#', icon: HomeIcon, current: true },
@@ -41,18 +44,40 @@ const navigation = [
   { name: "Validator", href: "#", icon: QrcodeIcon, current: false },
 ];
 
-export const DashboardLayout = () => {
+export const DashboardLayout: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { activeAccount, disconnect, client } = useWallet();
+  const tezos = useTezos()
 
-  // TODO: Use connected user address
-  var userAvatarData = new Identicon('d3b07384d113edec49eaa6238ad5ff00', 420).toString();
+  // client?.requestSignPayload({
+
+  // })
+
+  // useEffect(() => {
+  //   if (tezos && activeAccount?.address) {
+  //     tezos.tz.getBalance(activeAccount?.address!).then(balance => {
+  //       setBalance(balance.toNumber() / 1000000)
+  //     })
+  //   }
+  // }, [activeAccount?.address, tezos]);
+
+
+  if (!activeAccount) {
+    return null;
+  }
+
+  const userAvatarData = new Identicon(activeAccount?.address, 420).toString();
 
   const renderUserInfo = () => (
-    <div className="flex items-center px-2 py-4">
-      <img src={`data:image/png;base64,${userAvatarData}`} alt="" className="w-8 h-8 rounded-full" />
-      <div className="ml-4 text-sm font-medium text-white">
-        <p>tz123...123</p>
-        <a>Disconnect</a>
+    <div>
+      <div className="flex items-center px-2 py-4">
+        <img src={`data:image/png;base64,${userAvatarData}`} alt="" className="w-8 h-8 rounded-full" />
+        <div className="ml-4 text-sm font-medium text-white">
+          <p>{getShortAddress(activeAccount?.address)}</p>
+          <button className="text-gray-200" onClick={() => disconnect()}>
+            Disconnect
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -256,7 +281,9 @@ export const DashboardLayout = () => {
             </div>
           </div>
 
-          <main className="flex-1">CONTENT_HERE</main>
+          <main className="flex-1">
+            {children}
+          </main>
         </div>
       </div>
     </>
