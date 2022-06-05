@@ -1,25 +1,26 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { HashRouter, Route, Routes } from 'react-router-dom';
+
+// Page Components
+import { HomeIndex } from './pages/Home';
+import { DashboardIndex } from './pages/Dashboard';
+import { DashboardLayout } from './layouts/Dashboard';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <HashRouter>
+    <Routes>
+      <Route path="/">
+        <Route index element={<HomeIndex />} />
+        <Route path="dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardIndex />} />
+          {/* <Route path=":teamId" element={<Team />} />
+          <Route path="new" element={<NewTeamForm />} />
+          <Route index element={<LeagueStandings />} /> */}
+        </Route>
+      </Route>
+    </Routes>
+  </HashRouter>
   );
 }
 
