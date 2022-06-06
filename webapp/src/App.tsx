@@ -10,6 +10,7 @@ import { CollectionsNew } from './pages/Collections/new';
 import { GlobalLoading } from './hooks/useLoading';
 import { GlobalLoadingContainer } from './components/GlobalLoadingContainer';
 import { CollectionsView } from './pages/Collections/view';
+import { PurchaseTicket } from './pages/Purchase/id';
 
 const WP = WalletProvider as any;
 
@@ -31,8 +32,9 @@ function App() {
                 </Route>
                 {/* <Route path=":teamId" element={<Team />} />
                 <Route path="new" element={<NewTeamForm />} />
-                <Route index element={<LeagueStandings />} /> */}
+              <Route index element={<LeagueStandings />} /> */}
               </Route>
+              <Route path="purchase/:collectionId" element={<PurchaseTicket />} />
             </Route>
           </Routes>
         </HashRouter>
