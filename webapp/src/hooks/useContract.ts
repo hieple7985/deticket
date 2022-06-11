@@ -10,12 +10,11 @@ type DefaultMethods = Record<string, (...args: any[]) => ContractMethod<Wallet>>
 
 interface TMethods extends DefaultMethods {
   create_ticket_collection: (name: string, purchase_amount_mutez: number) => ContractMethod<Wallet>;
+  purchase_ticket: (ticket_collection_id: number, quantity: number) => ContractMethod<Wallet>;
   [key: string]: any;
 }
 
 type DeTicketContract = ContractAbstraction<Wallet, TMethods>
-
-
 
 export const useDeTicketContract = (): DeTicketContract | null => {
   const [contract, setContract] = useState<DeTicketContract | null>(null)

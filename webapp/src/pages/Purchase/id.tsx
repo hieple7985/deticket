@@ -1,23 +1,57 @@
 import { useParams } from "react-router-dom";
 import { useCollection } from "../../hooks/useCollection";
-import tezosIconSrc from '../../assets/images/tezos-icon.png';
-import verifiedIconSrc from '../../assets/images/verified-icon.svg';
+import tezosIconSrc from "../../assets/images/tezos-icon.png";
+import verifiedIconSrc from "../../assets/images/verified-icon.svg";
+import { useDeTicketContract } from "../../hooks/useContract";
+import { useState } from "react";
+import { CheckCircleIcon } from "@heroicons/react/outline";
 
 export const PurchaseTicket = () => {
+  const [isPurchasing, setIsPurchasing] = useState(false);
   const { collectionId } = useParams();
+  const contract = useDeTicketContract();
+
   const { collection } = useCollection({
     collectionId: collectionId ? parseInt(collectionId) : undefined,
   });
   if (!collection) {
     return null;
   }
+  const purchase = async () => {
+    setIsPurchasing(true);
+    try {
+      const res = await contract?.methods
+        .purchase_ticket(collection.id, 1)
+        .send({
+          amount: collection.purchase_amount_mutez * 1,
+        });
+      await res?.confirmation(1);
+      // @ts-ignore
+      if (typeof party !== "undefined") {
+        // @ts-ignore
+        const { confetti, variation } = party;
+        confetti(document.body, {
+          count: variation.range(140, 200),
+          size: variation.range(0.8, 1.2),
+          spread: variation.range(5, 10),
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    setIsPurchasing(false);
+  };
   return (
     <div className="bg-gray-900 w-screen h-screen flex items-center justify-center">
       <div className="bg-white overflow-hidden sm:rounded-lg sm:shadow">
         <div className="bg-white px-4 py-5 border-b border-gray-200 sm:px-6 w-[480px]">
           <h3 className="text-lg leading-6 font-medium text-gray-900 flex items-center">
             {collection.name}
-            <img src={verifiedIconSrc} alt="Ticket Collection Verified" className="w-4 h-4 ml-2" />
+            <img
+              src={verifiedIconSrc}
+              alt="Ticket Collection Verified"
+              className="w-4 h-4 ml-2"
+            />
           </h3>
         </div>
         <div
@@ -65,23 +99,36 @@ export const PurchaseTicket = () => {
           </div>
 
           <div>
-            <label
-              className="block text-sm font-medium text-gray-700 mb-4 text-right"
-            >
+            <label className="block text-sm font-medium text-gray-700 mb-4 text-right">
               Total
             </label>
             <div className="flex items-center pt-2">
-              <img src={tezosIconSrc} alt="Tezos" className="w-5 h-5 rounded-full mr-2" />
+              <img
+                src={tezosIconSrc}
+                alt="Tezos"
+                className="w-5 h-5 rounded-full mr-2"
+              />
               128.00
             </div>
           </div>
         </div>
 
         <div className="p-4">
-            <button type="submit" className="w-full bg-blue-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-blue-500">
-              Confirm order
-            </button>
-          </div>
+          <button
+            onClick={() => purchase()}
+            disabled={isPurchasing}
+            className="flex justify-center items-center w-full bg-blue-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-blue-500 disabled:bg-blue-300"
+          >
+            {isPurchasing ? (
+              <>
+                Confirming...
+                <div className="button-spinner ml-2">Loading...</div>
+              </>
+            ) : (
+              <>Confirm order</>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
