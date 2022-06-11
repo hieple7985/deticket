@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useCollection } from "../../hooks/useCollection";
 import tezosIconSrc from '../../assets/images/tezos-icon.png';
+import verifiedIconSrc from '../../assets/images/verified-icon.svg';
 
 export const PurchaseTicket = () => {
   const { collectionId } = useParams();
@@ -14,8 +15,9 @@ export const PurchaseTicket = () => {
     <div className="bg-gray-900 w-screen h-screen flex items-center justify-center">
       <div className="bg-white overflow-hidden sm:rounded-lg sm:shadow">
         <div className="bg-white px-4 py-5 border-b border-gray-200 sm:px-6 w-[480px]">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
+          <h3 className="text-lg leading-6 font-medium text-gray-900 flex items-center">
             {collection.name}
+            <img src={verifiedIconSrc} alt="Ticket Collection Verified" className="w-4 h-4 ml-2" />
           </h3>
         </div>
         <div
