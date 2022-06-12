@@ -2,6 +2,7 @@ import { prisma } from "../db";
 import { getContract, tezos } from "../tezos";
 import colors from 'colors'
 import BigNumber from 'bignumber.js';
+import { bytes2Char } from '@taquito/utils'
 
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 
@@ -44,16 +45,47 @@ const getLatestSyncedToken = async (): Promise<number> => {
 const syncSingleToken = async (storage: any, tokenId: number) => {
   const owner = await storage.ledger.get(tokenId)
   console.log(`Token Updated. tokenId=${tokenId} owner=${owner}`)
+  const collectionIdBN: BigNumber = await storage.token_ticket_collections.get(tokenId)
+  const tokenMetadata = await storage.token_metadata.get(tokenId)
+  console.log(tokenMetadata)
+  const tokenName = bytes2Char(tokenMetadata.token_info.get('name'))
+  // const tokenName = tokenMetadata.get('token_info').name
+  const collection = await syncCollection(storage, collectionIdBN.toNumber())
   await prisma.ticketTokens.upsert({
     create: {
       token_id: tokenId,
+      name: tokenName,
       owner_address: owner,
+      collectionId: collection.id,
     },
     update: {
+      name: tokenName,
       owner_address: owner,
     },
     where: {
       token_id: tokenId,
+    }
+  })
+}
+
+const syncCollection = async (storage: any, collectionTokenId: number) => {
+  const collection = await storage.ticket_collections.get(collectionTokenId)
+  const { name, owner } = collection
+  const purchase_amount_mutez = collection.purchase_amount_mutez.toNumber()
+  return prisma.ticketCollection.upsert({
+    create: {
+      ticket_collection_id: collectionTokenId,
+      name,
+      owner,
+      purchase_amount_mutez,
+    },
+    update: {
+      name,
+      owner,
+      purchase_amount_mutez,
+    },
+    where: {
+      ticket_collection_id: collectionTokenId,
     }
   })
 }

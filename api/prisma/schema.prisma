@@ -19,7 +19,19 @@ model Transaction {
 }
 
 model TicketTokens {
-  id                    String @id @default(uuid())
-  token_id              Int    @unique
-  owner_address         String
+  id            String           @id @default(uuid())
+  name          String
+  token_id      Int              @unique
+  owner_address String
+  collectionId  String
+  collection    TicketCollection @relation(fields: [collectionId], references: [id])
+}
+
+model TicketCollection {
+  id                    String         @id @default(uuid())
+  ticket_collection_id  Int            @unique
+  owner                 String
+  name                  String
+  purchase_amount_mutez Int
+  ticket_tokens         TicketTokens[]
 }
