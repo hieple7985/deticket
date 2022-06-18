@@ -3,6 +3,8 @@ import { getContract, tezos } from "../tezos";
 import colors from 'colors'
 import BigNumber from 'bignumber.js';
 import { bytes2Char } from '@taquito/utils'
+import { PollingSubscribeProvider } from "@taquito/taquito";
+
 
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 
@@ -40,6 +42,21 @@ const getLatestSyncedToken = async (): Promise<number> => {
     }]
   })
   return ticketToken ? ticketToken.token_id : -1
+}
+
+const getLatestContractCollection = async (): Promise<number> => {
+  const contract = await getContract()
+  const storage = await contract.storage<{ last_ticket_collection_id: BigNumber }>()
+  return storage.last_ticket_collection_id.toNumber()
+}
+
+const getLatestSyncedCollection = async (): Promise<number> => {
+  const ticketToken = await prisma.ticketCollection.findFirst({
+    orderBy: [{
+      ticket_collection_id: 'desc',
+    }]
+  })
+  return ticketToken ? ticketToken.ticket_collection_id : -1
 }
 
 const syncSingleToken = async (storage: any, tokenId: number) => {
@@ -103,25 +120,54 @@ const syncNewTokens = async () => {
     console.log('Nothing to sync')
     return
   }
-  const startToken = latestSyncedToken+1
+  const startToken = latestSyncedToken + 1
   const syncTokensList = []
-  for (let tokenId=startToken; tokenId < latestContractToken; tokenId++) {
+  for (let tokenId = startToken; tokenId < latestContractToken; tokenId++) {
     syncTokensList.push(tokenId)
   }
   await syncMultipleTokens(syncTokensList)
+}
+
+const syncMultipleCollections = async (collectionsList: number[]) => {
+  const contract = await getContract()
+  const storage = await contract.storage<{ ledger: any }>()
+  await Promise.all(collectionsList.map(collectionId => syncCollection(storage, collectionId)))
+}
+
+const syncNewCollections = async () => {
+  const latestContractCollection = await getLatestContractCollection()
+  const latestSyncedCollection = await getLatestSyncedCollection()
+  if (latestSyncedCollection >= latestContractCollection) {
+    console.log('Nothing to sync')
+    return
+  }
+  const startToken = latestSyncedCollection + 1
+  const syncCollectionsList = []
+  for (let tokenId = startToken; tokenId < latestContractCollection; tokenId++) {
+    syncCollectionsList.push(tokenId)
+  }
+  await syncMultipleCollections(syncCollectionsList)
 }
 
 export const startTezosWatcher = () => {
   syncNewTokens()
   console.log(colors.cyan('Tezos Smart Contract watcher started!'))
   console.log(colors.cyan(`Listening for contract transactions... (contract=${CONTRACT_ADDRESS})`))
-  tezos.stream.subscribeOperation({destination: CONTRACT_ADDRESS || ''}).on('data', (async (data) => {
+  tezos.setStreamProvider(tezos.getFactory(PollingSubscribeProvider)({
+    shouldObservableSubscriptionRetry: true,
+    pollingIntervalMilliseconds: 5000,
+  }));
+  const sub = tezos.stream.subscribeOperation({ destination: CONTRACT_ADDRESS || '' })
+
+  sub.on('data', (async (data) => {
     const tData = data as unknown as TransactionData
     const { hash, source, parameters: { entrypoint, value } } = tData
     console.log(`[Watcher] Transaction Received (hash=${hash} source=${source} entrypoint=${entrypoint})`)
     if (entrypoint === 'transfer') {
       const transferedTokens = getTransferedTokenIds(value)
       await syncMultipleTokens(transferedTokens)
+    } else if (entrypoint === 'create_ticket_collection')  {
+      await syncNewCollections()
     } else if (entrypoint === 'purchase_ticket') {
       await syncNewTokens()
     }
@@ -133,5 +179,5 @@ export const startTezosWatcher = () => {
         parameters_value: value,
       }
     })
-  }));
+  }))
 }
