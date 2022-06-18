@@ -4,9 +4,8 @@ import tezosIconSrc from "../../assets/images/tezos-icon.png";
 import verifiedIconSrc from "../../assets/images/verified-icon.svg";
 import { useDeTicketContract } from "../../hooks/useContract";
 import { useState } from "react";
-import { CheckCircleIcon } from "@heroicons/react/outline";
 
-export const PurchaseTicket = () => {
+export const CollectionView = () => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const { collectionId } = useParams();
   const contract = useDeTicketContract();
@@ -17,13 +16,14 @@ export const PurchaseTicket = () => {
   if (!collection) {
     return null;
   }
+  // console.log(collection.purchase_amount_mutez)
   const purchase = async () => {
     setIsPurchasing(true);
     try {
       const res = await contract?.methods
         .purchase_ticket(collection.id, 1)
         .send({
-          amount: collection.purchase_amount_mutez * 1,
+          amount: collection.purchase_amount_mutez.toNumber()/1000000 * 1,
         });
       await res?.confirmation(1);
       // @ts-ignore

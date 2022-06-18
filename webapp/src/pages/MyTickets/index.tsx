@@ -4,12 +4,17 @@ import { useNavigate } from "react-router-dom";
 import { Topbar } from "../../components/Topbar";
 import { CollectionListingItem } from "../../components/CollectionListingItem";
 import { useQuery } from "react-query";
-import { getAllCollections } from "../../client";
+import { getAllCollections, getMyTickets } from "../../client";
+import { TicketTokenListingItem } from "../../components/TicketTokenListingItem";
 
-export const HomeIndex = () => {
+export const MyTickets = () => {
+  const { activeAccount } = useWallet()
   const navigate = useNavigate();
-  const { data } = useQuery('getAllCollections', getAllCollections)
-  const collections = data?.data || []
+  const { data } = useQuery(['getMyTickets', activeAccount?.address], getMyTickets, {
+    enabled: !!activeAccount
+  })
+  console.log(data)
+  const ticketTokens = data?.data || []
   return (
     <div className="bg-slate-100 w-screen h-screen">
       <Topbar />
@@ -25,8 +30,8 @@ export const HomeIndex = () => {
         </div>
 
         <div className="mt-8 max-w-lg mx-auto grid gap-5 lg:grid-cols-3 lg:max-w-none">
-          {collections.map((collection: any) => (
-            <CollectionListingItem collection={collection} />
+          {ticketTokens.map((ticketToken: any) => (
+            <TicketTokenListingItem ticketToken={ticketToken} />
           ))}
         </div>
       </div>

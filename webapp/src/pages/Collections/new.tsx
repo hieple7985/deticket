@@ -1,11 +1,11 @@
-import { CreateEditCollectionForm } from "../../components/CreateEditCollectionForm"
+// import { CreateEditCollectionForm } from "../../components/CreateEditCollectionModal"
 import { DashboardLayout } from "../../layouts/Dashboard"
 
 export const CollectionsNew = () => {
   return (
     <DashboardLayout>
       <div className="p-8">
-        <CreateEditCollectionForm />
+        {/* <CreateEditCollectionForm /> */}
       </div>
     </DashboardLayout>
   )

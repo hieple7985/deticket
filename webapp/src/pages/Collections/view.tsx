@@ -1,7 +1,7 @@
 import { PaperClipIcon } from "@heroicons/react/outline";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { CreateEditCollectionForm } from "../../components/CreateEditCollectionForm";
+// import { CreateEditCollectionForm } from "../../components/CreateEditCollectionModal";
 import { TicketPreview } from "../../components/TicketPreview";
 import { useDeTicketContract } from "../../hooks/useContract";
 import { useGlobalLoading } from "../../hooks/useLoading";

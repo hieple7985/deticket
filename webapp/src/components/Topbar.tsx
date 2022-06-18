@@ -1,5 +1,5 @@
 /* This example requires Tailwind CSS v2.0+ */
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { MenuIcon, PlusIcon, XIcon } from "@heroicons/react/outline";
 import classNames from "classnames";
@@ -7,9 +7,12 @@ import { useWallet } from "@tezos-contrib/react-wallet-provider";
 import Identicon from "identicon.js";
 import { getShortAddress } from "../utils/wallet";
 import walletIcon from "../assets/images/wallet-icon.svg";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { CreateEditCollectionModal } from "./CreateEditCollectionModal";
 
 export const Topbar = () => {
+  const [createCollectionOpen, setCreateCollectionOpen] = useState(false)
+  const location = useLocation();  
   const { activeAccount, connect, disconnect } = useWallet();
   const getUserAvatar = (): string => {
     if (!activeAccount?.address) {
@@ -31,18 +34,19 @@ export const Topbar = () => {
   };
 
   const loggedNavigation = activeAccount ? [
-    { name: "My Tickets", href: "#", current: false },
-    { name: "My Collections", href: "#", current: false },
+    { name: "My Tickets", href: "/my-tickets", current: location.pathname === '/my-tickets' },
+    { name: "My Collections", href: "/my-collections", current: location.pathname === '/my-collections' },
   ] : [];
 
   const navigation = [
-    { name: "Home", href: "#", current: true },
+    { name: "Home", href: "/", current: location.pathname === '/' },
     ...loggedNavigation,
   ];
   return (
     <Disclosure as="nav" className="bg-deticket-blue">
       {({ open }) => (
         <>
+        <CreateEditCollectionModal open={createCollectionOpen}  setOpen={setCreateCollectionOpen} />
           <div className="max-w-7xl mx-auto px-2 sm:px-0 lg:px-0">
             <div className="relative flex items-center justify-between h-16">
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
@@ -72,9 +76,9 @@ export const Topbar = () => {
                 <div className="hidden sm:block sm:ml-6">
                   <div className="flex space-x-4">
                     {navigation.map((item) => (
-                      <a
+                      <Link
                         key={item.name}
-                        href={item.href}
+                        to={item.href}
                         className={classNames(
                           item.current
                             ? "bg-[rgb(14,27,60)] text-white"
@@ -84,7 +88,7 @@ export const Topbar = () => {
                         aria-current={item.current ? "page" : undefined}
                       >
                         {item.name}
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -98,13 +102,13 @@ export const Topbar = () => {
                   <BellIcon className="h-6 w-6" aria-hidden="true" />
                 </button> */}
 
-                <Link
-                  to="/new-collection"
+                <button
+                  onClick={() => setCreateCollectionOpen(true)}
                   className="mr-2 flex items-center bg-[rgba(255,255,255,0.1)] py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-[rgba(255,255,255,0.15)]"
                 >
                   <PlusIcon className="h-5 w-5 mr-2" />
                   Create Collection
-                </Link>
+                </button>
 
                 {/* Profile dropdown */}
                 <Menu as="div" className="ml-3 relative">

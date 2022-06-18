@@ -4,12 +4,13 @@ import { WalletProvider } from "@tezos-contrib/react-wallet-provider";
 
 // Page Components
 import { HomeIndex } from "./pages/Home";
-import { DashboardIndex } from "./pages/Dashboard";
 import { CollectionsNew } from "./pages/Collections/new";
 import { GlobalLoading } from "./hooks/useLoading";
 import { GlobalLoadingContainer } from "./components/GlobalLoadingContainer";
-import { CollectionsView } from "./pages/Collections/view";
-import { PurchaseTicket } from "./pages/Purchase/id";
+import { CollectionView } from "./pages/CollectionView/id";
+import { QueryClientProvider } from "react-query";
+import { queryClient } from "./client";
+import { MyTickets } from "./pages/MyTickets";
 
 const WP = WalletProvider as any;
 
@@ -18,18 +19,21 @@ function App() {
   return (
     <GlobalLoading.Provider value={{ loading, setLoading }}>
       <GlobalLoadingContainer loading={loading} />
-      <WP name="deticket" clientType="taquito" network="ITHACANET">
-        <HashRouter>
-          <Routes>
-            <Route path="/new-collection" element={<CollectionsNew />} />
-            <Route index element={<HomeIndex />} />
+      <QueryClientProvider client={queryClient}>
+        <WP name="deticket" clientType="taquito" network="ITHACANET">
+          <HashRouter>
+            <Routes>
+              <Route path="/new-collection" element={<CollectionsNew />} />
+              <Route path="/my-tickets" element={<MyTickets />} />
               <Route
-                path="purchase/:collectionId"
-                element={<PurchaseTicket />}
+                path="/collections/:collectionId"
+                element={<CollectionView />}
               />
-          </Routes>
-        </HashRouter>
-      </WP>
+              <Route index element={<HomeIndex />} />
+            </Routes>
+          </HashRouter>
+        </WP>
+      </QueryClientProvider>
     </GlobalLoading.Provider>
   );
 }

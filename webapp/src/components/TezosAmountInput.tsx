@@ -26,7 +26,7 @@ export const TezosAmountInput: FC<TezosAmountInputProps> = ({
   const estimatedUsd = rate * parseFloat((props.value as string) || '0')
 
   return (
-    <div className="w-[256px]">
+    <div className="w-full">
       <div className="mt-1 flex rounded-md shadow-sm relative">
         <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
           <img src={TezosIconImg} className="w-5 h-5 rounded-full" alt="Tezos" />
