@@ -8,12 +8,18 @@ TTicketCollectionInfo = sp.TRecord(
   id = sp.TNat,
   owner = sp.TAddress,
   name = sp.TString,
-  purchase_amount_mutez = sp.TMutez
+  cover_image = sp.TString,
+  datetime = sp.TNat,
+  max_supply = sp.TNat,
+  purchase_amount_mutez = sp.TMutez,
 )
 
 TCreateCollectionParams = sp.TRecord(
   name = sp.TString,
-  purchase_amount_mutez = sp.TMutez
+  cover_image = sp.TString,
+  datetime = sp.TNat,
+  max_supply = sp.TNat,
+  purchase_amount_mutez = sp.TMutez,
 )
 
 TPurchaseTicketParams = sp.TRecord(
@@ -21,13 +27,28 @@ TPurchaseTicketParams = sp.TRecord(
   quantity=sp.TNat
 )
 
+def mock_test_collection_params(
+  name = "My Ticket Collection",
+  cover_image = "ipfs://mocked-ipfs-uri",
+  datetime = 1655673791, # Sun Jun 19 2022 21:23:11 GMT+0000
+  max_supply = 1000,
+  purchase_amount_mutez = sp.mutez(5)
+):
+  return sp.record(
+    name=name,
+    cover_image=cover_image,
+    datetime=datetime,
+    max_supply=max_supply,
+    purchase_amount_mutez=purchase_amount_mutez
+  )
+
+
 class DeTicketFA2(
   FA2.Admin,
   FA2.ChangeMetadata,
   FA2.WithdrawMutez,
   FA2.OnchainviewBalanceOf,
   FA2.Fa2Nft,
-  FA2.OffchainViewsNft,
 ):
   def __init__(self, admin, metadata, token_metadata = {}, ledger = {}, policy = None, metadata_base = None):
     FA2.Fa2Nft.__init__(self, metadata, token_metadata = token_metadata, ledger = ledger, policy = policy, metadata_base = metadata_base)
@@ -54,6 +75,9 @@ class DeTicketFA2(
       id=ticket_collection_id,
       owner=sp.sender,
       name=params.name,
+      cover_image=params.cover_image,
+      datetime=params.datetime,
+      max_supply=params.max_supply,
       purchase_amount_mutez=params.purchase_amount_mutez
     )
     self.data.ticket_collections[ticket_collection_id] = ticket_collection
@@ -74,7 +98,7 @@ class DeTicketFA2(
         "symbol": sp.utils.bytes_of_string("DTK"),
         "name": Utils.Bytes.of_string(sp.concat([collection.name, " #", Utils.String.of_int(sp.to_int(token_id))])),
         "icon": sp.utils.bytes_of_string("ipfs://QmPyTq2y5krFPmcxWAGtnzphgB979q4kj9UddRYx8rWp8c"),
-        "collection_id": sp.pack(collection.id),
+        "collection_id": Utils.Bytes.of_nat(collection_id),
       })
       metadata = sp.record(token_id=token_id, token_info=token_info_metadata)
       self.data.token_metadata[token_id] = metadata
@@ -99,11 +123,14 @@ class DeTicketFA2(
     sc += c
     sc.verify(c.data.administrator == admin.address)
     sc.verify(c.data.last_ticket_collection_id == 0)
-    c.create_ticket_collection(sp.record(purchase_amount_mutez=sp.mutez(5), name="Rock Show")).run(valid = True, sender = user)
+    c.create_ticket_collection(mock_test_collection_params(purchase_amount_mutez=sp.mutez(5), name="Rock Show")).run(valid = True, sender = user)
     sc.verify(c.data.ticket_collections[0] == sp.record(
       id=sp.nat(0),
       owner=user.address,
       name="Rock Show",
+      cover_image="ipfs://mocked-ipfs-uri",
+      datetime=1655673791, # Sun Jun 19 2022 21:23:11 GMT+0000
+      max_supply=1000,
       purchase_amount_mutez=sp.mutez(5)
     ))
 
@@ -122,7 +149,7 @@ class DeTicketFA2(
     sc += c
     sc.verify(c.data.administrator == admin.address)
     sc.verify(c.data.last_ticket_collection_id == 0)
-    c.create_ticket_collection(sp.record(purchase_amount_mutez=sp.mutez(5), name="Rock Show")).run(valid =True, sender=eventOwner)
+    c.create_ticket_collection(mock_test_collection_params(purchase_amount_mutez=sp.mutez(5), name="Rock Show")).run(valid =True, sender=eventOwner)
     sc.verify(~c.data.ticket_collection_balances.contains(0))
     # First Purchase
     c.purchase_ticket(

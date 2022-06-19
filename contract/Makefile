@@ -5,7 +5,7 @@ endif
 
 compile:
 	rm -rf build/*
-	~/smartpy-cli/SmartPy.sh compile ./src/deticket.py ./build
+	~/smartpy-cli/SmartPy.sh compile ./deticket/deticket.py ./build
 
 deploy: compile
 	~/smartpy-cli/SmartPy.sh originate-contract \
@@ -15,4 +15,4 @@ deploy: compile
 		--private-key=${ACCOUNT_PRIVATE_KEY}
 
 test:
-	~/smartpy-cli/SmartPy.sh test ./src/deticket.py .test_out
+	~/smartpy-cli/SmartPy.sh test ./deticket/deticket.py .test_out --purge
