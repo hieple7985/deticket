@@ -1,11 +1,13 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useCollection } from "../../hooks/useCollection";
 import tezosIconSrc from "../../assets/images/tezos-icon.png";
 import verifiedIconSrc from "../../assets/images/verified-icon.svg";
 import { useDeTicketContract } from "../../hooks/useContract";
 import { useState } from "react";
+import { waitForTx } from "../../utils/tx";
 
 export const CollectionView = () => {
+  const navigate = useNavigate()
   const [isPurchasing, setIsPurchasing] = useState(false);
   const { collectionId } = useParams();
   const contract = useDeTicketContract();
@@ -26,6 +28,12 @@ export const CollectionView = () => {
           amount: collection.purchase_amount_mutez.toNumber()/1000000 * 1,
         });
       await res?.confirmation(1);
+      try {        
+        await waitForTx(res?.opHash!)
+      } catch (error) {
+        console.log('waitForTx timeout')
+        // TODO: Sentry or any reporting tool here
+      }
       // @ts-ignore
       if (typeof party !== "undefined") {
         // @ts-ignore
@@ -36,6 +44,7 @@ export const CollectionView = () => {
           spread: variation.range(5, 10),
         });
       }
+      navigate('/my-tickets')
     } catch (error) {
       console.log(error);
     }

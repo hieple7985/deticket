@@ -21,6 +21,7 @@
     "classnames": "^2.3.1",
     "identicon.js": "^2.3.3",
     "react": "^18.1.0",
+    "react-dates": "^21.8.0",
     "react-dom": "^18.1.0",
     "react-query": "^3.39.1",
     "react-router-dom": "^6.3.0",
@@ -54,6 +55,7 @@
   },
   "devDependencies": {
     "@types/identicon.js": "^2.3.1",
+    "@types/react-dates": "^21.8.3",
     "assert": "^2.0.0",
     "autoprefixer": "^10.4.7",
     "crypto-browserify": "^3.12.0",

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { WalletProvider } from "@tezos-contrib/react-wallet-provider";
 
+import 'react-dates/initialize';
+
 // Page Components
 import { HomeIndex } from "./pages/Home";
 import { CollectionsNew } from "./pages/Collections/new";
