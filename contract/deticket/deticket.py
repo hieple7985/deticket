@@ -10,6 +10,7 @@ TTicketCollectionInfo = sp.TRecord(
   name = sp.TString,
   cover_image = sp.TString,
   datetime = sp.TNat,
+  location = sp.TString,
   max_supply = sp.TNat,
   purchase_amount_mutez = sp.TMutez,
 )
@@ -18,6 +19,7 @@ TCreateCollectionParams = sp.TRecord(
   name = sp.TString,
   cover_image = sp.TString,
   datetime = sp.TNat,
+  location = sp.TString,
   max_supply = sp.TNat,
   purchase_amount_mutez = sp.TMutez,
 )
@@ -32,14 +34,16 @@ def mock_test_collection_params(
   cover_image = "ipfs://mocked-ipfs-uri",
   datetime = 1655673791, # Sun Jun 19 2022 21:23:11 GMT+0000
   max_supply = 1000,
-  purchase_amount_mutez = sp.mutez(5)
+  purchase_amount_mutez = sp.mutez(5),
+  location = "My Location"
 ):
   return sp.record(
     name=name,
     cover_image=cover_image,
     datetime=datetime,
     max_supply=max_supply,
-    purchase_amount_mutez=purchase_amount_mutez
+    purchase_amount_mutez=purchase_amount_mutez,
+    location=location
   )
 
 
@@ -78,7 +82,8 @@ class DeTicketFA2(
       cover_image=params.cover_image,
       datetime=params.datetime,
       max_supply=params.max_supply,
-      purchase_amount_mutez=params.purchase_amount_mutez
+      purchase_amount_mutez=params.purchase_amount_mutez,
+      location=params.location
     )
     self.data.ticket_collections[ticket_collection_id] = ticket_collection
     self.data.last_ticket_collection_id += 1
@@ -131,7 +136,8 @@ class DeTicketFA2(
       cover_image="ipfs://mocked-ipfs-uri",
       datetime=1655673791, # Sun Jun 19 2022 21:23:11 GMT+0000
       max_supply=1000,
-      purchase_amount_mutez=sp.mutez(5)
+      purchase_amount_mutez=sp.mutez(5),
+      location="My Location"
     ))
 
   @sp.add_test(name="Test Purchase One Ticket")
