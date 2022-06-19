@@ -89,12 +89,17 @@ const syncCollection = async (storage: any, collectionTokenId: number) => {
   const collection = await storage.ticket_collections.get(collectionTokenId)
   const { name, owner } = collection
   const purchase_amount_mutez = collection.purchase_amount_mutez.toNumber()
+  const max_supply = collection.max_supply.toNumber()
+  const datetime = collection.datetime.toNumber()
   return prisma.ticketCollection.upsert({
     create: {
       ticket_collection_id: collectionTokenId,
       name,
       owner,
       purchase_amount_mutez,
+      cover_image: collection.cover_image,
+      datetime: new Date(datetime*1000),
+      max_supply,
     },
     update: {
       name,
@@ -150,6 +155,7 @@ const syncNewCollections = async () => {
 }
 
 export const startTezosWatcher = () => {
+  syncNewCollections()
   syncNewTokens()
   console.log(colors.cyan('Tezos Smart Contract watcher started!'))
   console.log(colors.cyan(`Listening for contract transactions... (contract=${CONTRACT_ADDRESS})`))

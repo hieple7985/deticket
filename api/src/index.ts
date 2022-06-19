@@ -28,6 +28,9 @@ apiRouter.get('/collections', async (req: Request, res: Response) => {
       name: true,
       owner: true,
       purchase_amount_mutez: true,
+      cover_image: true,
+      datetime: true,
+      max_supply: true,
     }
   })
   const count = await prisma.ticketCollection.count()
@@ -58,6 +61,9 @@ apiRouter.get('/ticket-tokens', async (req: Request, res: Response) => {
           name: true,
           purchase_amount_mutez: true,
           owner: true,
+          cover_image: true,
+          datetime: true,
+          max_supply: true,
         }
       }
     }
@@ -66,6 +72,31 @@ apiRouter.get('/ticket-tokens', async (req: Request, res: Response) => {
     where,
   })
   res.json({ data, count })
+})
+
+apiRouter.get('/transactions/:hash', async (req: Request, res: Response) => {
+  try {    
+    const tx = await prisma.transaction.findFirst({
+      where: {
+        hash: req.params.hash,
+      },
+      select: {
+        hash: true,
+        source: true,
+      }
+    })
+    if (!tx) {
+      return res.sendStatus(404)
+    }
+    return res.json(tx)
+  } catch (error) {
+    res.sendStatus(500)
+  }
+  res.sendStatus(500)
+})
+
+apiRouter.post('/upload-image', async (req: Request, res: Response) => {
+  
 })
 
 app.use('/api', apiRouter)

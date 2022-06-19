@@ -33,5 +33,8 @@ model TicketCollection {
   owner                 String
   name                  String
   purchase_amount_mutez Int
+  cover_image           String
+  max_supply            Int
+  datetime              DateTime
   ticket_tokens         TicketTokens[]
 }
