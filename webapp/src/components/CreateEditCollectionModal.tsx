@@ -26,11 +26,16 @@ export const CreateEditCollectionModal: FC<
   const { setLoading } = useGlobalLoading();
   const contract = useDeTicketContract();
 
-  const getDatetimeUnixTime = async () => {
+  // TODO: Remove it
+  const location = 'Testnet Arena'
+  const coverImage = 'ipfs://QmTHqGtwWj8p3gwZTVMZWK69ftn8uHtYC9fwQctmD7DrpJ'
+  const maxSupply = 10
+
+  const getDatetimeUnixTime = (): number => {
     const formattedDate = date.format('YYYY-MM-DD')
     const formattedTime = `${time} ${ampm}`
     const formattedDatetime = `${formattedDate} ${formattedTime}`
-    return moment(formattedDatetime).unix
+    return moment(formattedDatetime).unix()
   }
 
   const onSubmit = async () => {
@@ -42,7 +47,14 @@ export const CreateEditCollectionModal: FC<
       // Create or Edit here
       const amountNumber = Math.round(parseFloat(amount) * 10 ** 6);
       const res = await contract?.methods
-        .create_ticket_collection(name, amountNumber)
+        .create_ticket_collection(
+          coverImage,
+          getDatetimeUnixTime(),
+          location,
+          maxSupply,
+          name,
+          amountNumber,
+        )
         .send();
       await res.confirmation(1);
       const s = await contract?.storage<{

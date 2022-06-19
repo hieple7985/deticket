@@ -1,6 +1,7 @@
 import { ExternalLinkIcon, MailIcon, PhoneIcon, QrcodeIcon } from "@heroicons/react/outline";
 import { FC } from "react";
 import tezosIconSrc from "../assets/images/tezos-icon.png";
+import { ipfsGatewaySrc } from "../utils/ipfs";
 
 export const TicketTokenListingItem: FC<{ ticketToken: any }> = ({
   ticketToken,
@@ -13,7 +14,7 @@ export const TicketTokenListingItem: FC<{ ticketToken: any }> = ({
       <div className="flex-shrink-0">
         <img
           className="h-48 w-full object-cover"
-          src={ticketToken.imageUrl}
+          src={ipfsGatewaySrc(ticketToken.collection.cover_image)}
           alt=""
         />
       </div>

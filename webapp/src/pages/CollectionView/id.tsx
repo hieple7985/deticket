@@ -5,6 +5,8 @@ import verifiedIconSrc from "../../assets/images/verified-icon.svg";
 import { useDeTicketContract } from "../../hooks/useContract";
 import { useState } from "react";
 import { waitForTx } from "../../utils/tx";
+import { ipfsGatewaySrc } from "../../utils/ipfs";
+import { formatTicketDate } from "../../utils/date";
 
 export const CollectionView = () => {
   const navigate = useNavigate()
@@ -50,6 +52,7 @@ export const CollectionView = () => {
     }
     setIsPurchasing(false);
   };
+  const tezAmount = collection.purchase_amount_mutez / 10**6
   return (
     <div className="bg-gray-900 w-screen h-screen flex items-center justify-center">
       <div className="bg-white overflow-hidden sm:rounded-lg sm:shadow">
@@ -66,19 +69,19 @@ export const CollectionView = () => {
         <div
           className="bg-cover w-full h-32 bg-center"
           style={{
-            backgroundImage: `url(https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80)`,
+            backgroundImage: `url(${ipfsGatewaySrc(collection.cover_image)})`,
           }}
         ></div>
         <div className="p-8 border-b border-gray-200">
           <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500">Location</dt>
-              <dd className="mt-1 text-sm text-gray-900">Teste</dd>
+              <dd className="mt-1 text-sm text-gray-900">{collection.location}</dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500">Date / Time</dt>
               <dd className="mt-1 text-sm text-gray-900">
-                Wednesday, May 28, at 2:00 PM
+                {formatTicketDate(collection.datetime.toNumber())}
               </dd>
             </div>
           </dl>
@@ -117,7 +120,7 @@ export const CollectionView = () => {
                 alt="Tezos"
                 className="w-5 h-5 rounded-full mr-2"
               />
-              128.00
+              {tezAmount}
             </div>
           </div>
         </div>

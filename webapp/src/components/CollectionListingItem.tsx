@@ -1,6 +1,8 @@
 import { FC } from "react";
 import { Link } from "react-router-dom";
 import tezosIconSrc from "../assets/images/tezos-icon.png";
+import { formatTicketDate } from "../utils/date";
+import { ipfsGatewaySrc } from "../utils/ipfs";
 
 export const CollectionListingItem: FC<{ collection: any }> = ({
   collection,
@@ -15,15 +17,13 @@ export const CollectionListingItem: FC<{ collection: any }> = ({
         <div className="flex-shrink-0">
           <img
             className="h-48 w-full object-cover"
-            src={collection.imageUrl}
+            src={ipfsGatewaySrc(collection.cover_image)}
             alt=""
           />
         </div>
         <div className="flex-1 bg-white p-6 flex flex-col justify-between">
           <div className="mt-4 flex space-x-1 text-sm text-gray-500">
-            <time dateTime={collection.datetime?.toISOString()}>April 22</time>
-            <span aria-hidden="true">&middot;</span>
-            <span>6 PM</span>
+            <time dateTime={collection.datetime}>{formatTicketDate(collection.datetime)}</time>
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium text-indigo-600">

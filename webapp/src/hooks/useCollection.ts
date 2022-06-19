@@ -11,7 +11,7 @@ export const useCollection = ({ collectionId } :{ collectionId?: number }): UseC
   const contract = useDeTicketContract();
   const [collection, setCollection] = useState<any>(null);
   useEffect(() => {
-    if (contract && collectionId) {
+    if (contract && collectionId !== undefined) {
       (async () => {
         setLoading(true);
         try {
