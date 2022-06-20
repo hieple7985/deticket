@@ -5,10 +5,18 @@ import { startTezosWatcher } from './watcher';
 import { getPaginationParams } from './utils/paginate'
 import { Prisma } from '@prisma/client';
 import cors from 'cors';
+import { uploadImageToIPFS } from './ipfs';
+import { v4 as uuidv4 } from 'uuid';
+import { verifyUserSignature } from './utils/verifySignature';
+import { generateSignaturePayloadBytes } from './utils/generateSignaturePayloadBytes';
+import { json } from 'stream/consumers';
+import { getLoggerUserAddress } from './utils/getLoggerUser';
+import { checkTokenOwnership } from './utils/checkTokenOwnership';
 
 dotenv.config();
 
 const app: Express = express();
+app.use(express.json({ limit: '10mb' }));
 const port = process.env.PORT || 4000;
 app.use(cors())
 
@@ -64,6 +72,7 @@ apiRouter.get('/ticket-tokens', async (req: Request, res: Response) => {
           cover_image: true,
           datetime: true,
           max_supply: true,
+          location: true,
         }
       }
     }
@@ -96,14 +105,115 @@ apiRouter.get('/transactions/:hash', async (req: Request, res: Response) => {
 })
 
 apiRouter.post('/upload-image', async (req: Request, res: Response) => {
-  
+  try {
+    const { url } = await uploadImageToIPFS(req.body.imageBase64)
+    res.json({ url })
+  } catch (error) {
+    res.sendStatus(500)
+  }
+})
+
+
+apiRouter.post('/generate-nonce', async (req: Request, res: Response) => {
+  const { address } = req.body
+  const nonce = uuidv4()
+  const userNonce = await prisma.userNonce.upsert({
+    where: {
+       address,
+    },
+    create: {
+      address,
+      nonce,
+    },
+    update: {
+      nonce,
+    }
+  })
+  res.json({
+    nonce: userNonce.nonce,
+  })
+})
+
+apiRouter.post('/auth', async (req: Request, res: Response) => {
+  try {
+    const { address, signature, publicKey } = req.body
+    const userNonce = await prisma.userNonce.findUnique({
+      where: {
+        address,
+      }
+    })
+    if (!userNonce) {
+      return res.sendStatus(401)
+    }
+    const { nonce } = userNonce
+    const payloadBytes = generateSignaturePayloadBytes(nonce)
+    const verify = await verifyUserSignature(payloadBytes, signature, publicKey)
+    if (!verify) {
+      res.sendStatus(401)
+    }
+    const token = uuidv4()
+    const expires_at = new Date();
+    expires_at.setMinutes(expires_at.getMinutes() + 30);
+    await prisma.userAccessToken.upsert({
+      where: {
+        address,
+      },
+      update: {
+        token,
+        expires_at,
+      },
+      create: {
+        address,
+        token,
+        expires_at,
+      }
+    })
+    res.json({ token })
+  } catch (error) {
+    res.sendStatus(500)
+  }
+})
+
+apiRouter.post('/issue-ticket-token', async (req: Request, res: Response) => {
+  const { tokenId } = req.body
+  const loggedUserAddress = await getLoggerUserAddress(req)
+  if (!loggedUserAddress) {
+    return res.sendStatus(401)
+  }
+  const isTokenOwner = await checkTokenOwnership(tokenId, loggedUserAddress)
+  if (!isTokenOwner) {
+    return res.sendStatus(401)
+  }
+  const ticketAccessToken = await prisma.ticketAccessToken.findFirst({
+    where: {
+      owner_address: loggedUserAddress,
+      ticket_token_id: tokenId,
+    }
+  })
+  if (ticketAccessToken) {
+    return res.json({ token: ticketAccessToken.token })
+  }
+  const token = uuidv4()
+  const expires_at = new Date();
+  expires_at.setMinutes(expires_at.getMinutes() + 30);
+  await prisma.ticketAccessToken.upsert({
+    where: {
+      ticket_token_id: tokenId,
+    },
+    update: {
+      token: token,
+    },
+    create: {
+      owner_address: loggedUserAddress,
+      token: token,
+      ticket_token_id: tokenId,
+    }
+  })
+  return res.json({ token })
 })
 
 app.use('/api', apiRouter)
 
-
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
 });
-
-

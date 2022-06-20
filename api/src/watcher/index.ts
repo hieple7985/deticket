@@ -100,6 +100,7 @@ const syncCollection = async (storage: any, collectionTokenId: number) => {
       cover_image: collection.cover_image,
       datetime: new Date(datetime*1000),
       max_supply,
+      location: collection.location || '',
     },
     update: {
       name,

@@ -10,10 +10,12 @@ import { formatTicketDate } from "../../utils/date";
 
 export const CollectionView = () => {
   const navigate = useNavigate()
+  const [quantity, setQuantity] = useState("1")
   const [isPurchasing, setIsPurchasing] = useState(false);
   const { collectionId } = useParams();
   const contract = useDeTicketContract();
-
+  
+  const quantityInt = parseInt(quantity)
   const { collection } = useCollection({
     collectionId: collectionId ? parseInt(collectionId) : undefined,
   });
@@ -25,9 +27,9 @@ export const CollectionView = () => {
     setIsPurchasing(true);
     try {
       const res = await contract?.methods
-        .purchase_ticket(collection.id, 1)
+        .purchase_ticket(collection.id, quantityInt)
         .send({
-          amount: collection.purchase_amount_mutez.toNumber()/1000000 * 1,
+          amount: collection.purchase_amount_mutez.toNumber()/1000000 * quantityInt,
         });
       await res?.confirmation(1);
       try {        
@@ -53,6 +55,7 @@ export const CollectionView = () => {
     setIsPurchasing(false);
   };
   const tezAmount = collection.purchase_amount_mutez / 10**6
+  const total = tezAmount * quantityInt
   return (
     <div className="bg-gray-900 w-screen h-screen flex items-center justify-center">
       <div className="bg-white overflow-hidden sm:rounded-lg sm:shadow">
@@ -97,6 +100,8 @@ export const CollectionView = () => {
             <select
               id="quantity"
               name="quantity"
+              onChange={(e) => setQuantity(e.target.value)}
+              value={quantity}
               className="rounded-md border border-gray-300 text-base font-medium text-gray-700 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             >
               <option value="1">1</option>
@@ -120,7 +125,7 @@ export const CollectionView = () => {
                 alt="Tezos"
                 className="w-5 h-5 rounded-full mr-2"
               />
-              {tezAmount}
+              {total}
             </div>
           </div>
         </div>

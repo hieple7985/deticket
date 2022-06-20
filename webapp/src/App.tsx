@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { WalletProvider } from "@tezos-contrib/react-wallet-provider";
-
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import 'react-dates/initialize';
 
 // Page Components
@@ -20,6 +21,7 @@ function App() {
   const [loading, setLoading] = useState<boolean>(false);
   return (
     <GlobalLoading.Provider value={{ loading, setLoading }}>
+      <ToastContainer />
       <GlobalLoadingContainer loading={loading} />
       <QueryClientProvider client={queryClient}>
         <WP name="deticket" clientType="taquito" network="ITHACANET">

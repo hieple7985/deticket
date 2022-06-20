@@ -1,42 +1,41 @@
 import { UploadIcon } from "@heroicons/react/outline";
-import { FC, useState } from "react";
+import { ChangeEvent, FC, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDeTicketContract } from "../hooks/useContract";
 import { useGlobalLoading } from "../hooks/useLoading";
 import { Modal, ModalProps } from "./Modal";
 import { TezosAmountInput } from "./TezosAmountInput";
 import { SingleDatePicker } from "react-dates";
-import "../styles/datepicker.css"
+import "../styles/datepicker.css";
 
 import coverImagePlaceholderSrc from "../assets/images/cover-image-placeholder.png";
 import moment from "moment";
+import { toast } from "react-toastify";
+import { client } from "../client";
 
 export const CreateEditCollectionModal: FC<
   Pick<ModalProps, "open" | "setOpen">
 > = ({ open, setOpen }) => {
   const [date, setDate] = useState<any>();
-  const [time, setTime] = useState<any>('12:00');
-  const [ampm, setAmpm] = useState<any>('AM');
-  const [totalSupply, setTotalSupply] = useState('1000');
+  const [time, setTime] = useState<any>("12:00");
+  const [ampm, setAmpm] = useState<any>("AM");
+  const [location, setLocation] = useState('')
+  const [coverImageBase64, setCoverImageBase64] = useState<string | null>(null);
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [totalSupply, setTotalSupply] = useState("1000");
   const [dateFocused, setDateFocused] = useState(false);
-  const [imageBase64 /*setImageBase64*/] = useState<string | null>(null);
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const { setLoading } = useGlobalLoading();
   const contract = useDeTicketContract();
 
-  // TODO: Remove it
-  const location = 'Testnet Arena'
-  const coverImage = 'ipfs://QmTHqGtwWj8p3gwZTVMZWK69ftn8uHtYC9fwQctmD7DrpJ'
-  const maxSupply = 10
-
   const getDatetimeUnixTime = (): number => {
-    const formattedDate = date.format('YYYY-MM-DD')
-    const formattedTime = `${time} ${ampm}`
-    const formattedDatetime = `${formattedDate} ${formattedTime}`
-    return moment(formattedDatetime).unix()
-  }
+    const formattedDate = date.format("YYYY-MM-DD");
+    const formattedTime = `${time} ${ampm}`;
+    const formattedDatetime = `${formattedDate} ${formattedTime}`;
+    return moment(formattedDatetime).unix();
+  };
 
   const onSubmit = async () => {
     setLoading(true);
@@ -48,12 +47,12 @@ export const CreateEditCollectionModal: FC<
       const amountNumber = Math.round(parseFloat(amount) * 10 ** 6);
       const res = await contract?.methods
         .create_ticket_collection(
-          coverImage,
+          coverImage || '',
           getDatetimeUnixTime(),
           location,
-          maxSupply,
+          parseInt(totalSupply),
           name,
-          amountNumber,
+          amountNumber
         )
         .send();
       await res.confirmation(1);
@@ -70,7 +69,48 @@ export const CreateEditCollectionModal: FC<
     }
     setLoading(false);
   };
-  const formIsValid = name !== '' && date && amount
+  const getImageBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      var reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = function () {
+        var img = new Image();
+
+        img.onload = function () {
+          if (
+            !["image/png", "image/jpg", "image/jpeg", "image/webp"].includes(
+              file.type
+            ) ||
+            file.size > 5 * 1024 * 1024
+          ) {
+            return reject(new Error("INVALID_IMAGE"));
+          }
+          resolve(img.src);
+        };
+
+        img.src = reader.result?.toString() || ""; // is the data URL because called with readAsDataURL
+      };
+      reader.onerror = function (error) {
+        reject(error);
+      };
+    });
+  const onFileInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    try {
+      const imageBase64 = await getImageBase64(e.target.files![0]);
+      console.log(imageBase64);
+      setCoverImageBase64(imageBase64);
+      const { data } = await client.post('/upload-image', {
+        imageBase64,
+      })
+      setCoverImage(data.url);
+      console.log(data.url)
+    } catch (error: any) {
+      if (error.message === "INVALID_IMAGE") {
+        toast.error("Images should have png, jpeg or webp format up to 1mb");
+      }
+    }
+  };
+  const formIsValid = name !== "" && date && amount;
   return (
     <Modal open={open} setOpen={setOpen}>
       <form className="space-y-8 divide-y divide-gray-200">
@@ -101,11 +141,12 @@ export const CreateEditCollectionModal: FC<
                 <label className="block text-sm font-medium text-gray-700">
                   Image
                 </label>
-                <img
-                  alt="CoverImage"
-                  src={imageBase64 || coverImagePlaceholderSrc}
-                  className="w-full"
-                />
+                <div
+                  className="bg-cover w-full h-32 bg-center"
+                  style={{
+                    backgroundImage: `url(${coverImageBase64 || coverImagePlaceholderSrc})`,
+                  }}
+                ></div>
                 <label
                   htmlFor="image-upload"
                   className="mt-2 cursor-pointer items-center inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
@@ -116,7 +157,7 @@ export const CreateEditCollectionModal: FC<
                     id="image-upload"
                     type="file"
                     className="sr-only"
-                    onChange={() => {}}
+                    onChange={onFileInputChange}
                   />
                 </label>
                 <div className="py-1 pt-2 text-xs text-gray-500">
@@ -150,16 +191,20 @@ export const CreateEditCollectionModal: FC<
                       onChange={(e) => setTime(e.target.value)}
                       className="max-w-lg block focus:ring-indigo-500 focus:border-indigo-500 w-full shadow-sm sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
                     >
-                      {[1,2,3,4,5,6,7,8,9,10,11,12].map(hour => {
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((hour) => {
                         const paddedHour = hour.toString().padStart(2, "0");
-                        const paddedHourZero = paddedHour + ':00'
-                        const paddedHourAndAHalf = paddedHour + ':30'
+                        const paddedHourZero = paddedHour + ":00";
+                        const paddedHourAndAHalf = paddedHour + ":30";
                         return (
                           <>
-                          <option value={paddedHourZero}>{paddedHourZero}</option>
-                          <option value={paddedHourAndAHalf}>{paddedHourAndAHalf}</option>
+                            <option value={paddedHourZero}>
+                              {paddedHourZero}
+                            </option>
+                            <option value={paddedHourAndAHalf}>
+                              {paddedHourAndAHalf}
+                            </option>
                           </>
-                        )
+                        );
                       })}
                     </select>
                     <select
@@ -171,6 +216,20 @@ export const CreateEditCollectionModal: FC<
                       <option value="AM">AM</option>
                     </select>
                   </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700">
+                  Location
+                </label>
+                <div className="mt-1 flex rounded-md shadow-sm">
+                  <input
+                    type="text"
+                    className=" focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                  />
                 </div>
               </div>
 
@@ -195,15 +254,15 @@ export const CreateEditCollectionModal: FC<
                     htmlFor="about"
                     className="block text-sm font-medium text-gray-700"
                   >
-                   Total (Max Supply)
+                    Total (Max Supply)
                   </label>
                   <div className="mt-1">
-                  <input
-                    type="number"
-                    onChange={(e) => setTotalSupply(e.target.value)}
-                    value={totalSupply}
-                    className=" focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"
-                  />
+                    <input
+                      type="number"
+                      onChange={(e) => setTotalSupply(e.target.value)}
+                      value={totalSupply}
+                      className=" focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"
+                    />
                   </div>
                   <p className="mt-2 text-sm text-gray-500">total tickets</p>
                 </div>

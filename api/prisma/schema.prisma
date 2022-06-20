@@ -37,4 +37,25 @@ model TicketCollection {
   max_supply            Int
   datetime              DateTime
   ticket_tokens         TicketTokens[]
+  location              String
+}
+
+model UserAccessToken {
+  id         String   @id @default(uuid())
+  address    String   @unique
+  token      String   @unique
+  expires_at DateTime
+}
+
+model UserNonce {
+  id      String @id @default(uuid())
+  address String @unique
+  nonce   String @unique
+}
+
+model TicketAccessToken {
+  id              String @id @default(uuid())
+  owner_address   String
+  ticket_token_id Int    @unique
+  token           String @unique
 }

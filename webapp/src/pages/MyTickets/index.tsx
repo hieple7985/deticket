@@ -6,6 +6,7 @@ import { CollectionListingItem } from "../../components/CollectionListingItem";
 import { useQuery } from "react-query";
 import { getAllCollections, getMyTickets } from "../../client";
 import { TicketTokenListingItem } from "../../components/TicketTokenListingItem";
+import { useAuth } from "../../hooks/useAuth";
 
 export const MyTickets = () => {
   const { activeAccount } = useWallet()
@@ -13,6 +14,7 @@ export const MyTickets = () => {
   const { data } = useQuery(['getMyTickets', activeAccount?.address], getMyTickets, {
     enabled: !!activeAccount
   })
+  const { auth } = useAuth()
   console.log(data)
   const ticketTokens = data?.data || []
   return (
@@ -31,7 +33,7 @@ export const MyTickets = () => {
 
         <div className="mt-8 max-w-lg mx-auto grid gap-5 lg:grid-cols-3 lg:max-w-none">
           {ticketTokens.map((ticketToken: any) => (
-            <TicketTokenListingItem ticketToken={ticketToken} />
+            <TicketTokenListingItem ticketToken={ticketToken} auth={auth} />
           ))}
         </div>
       </div>
