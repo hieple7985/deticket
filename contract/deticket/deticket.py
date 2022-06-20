@@ -63,12 +63,14 @@ class DeTicketFA2(
       # Ticket Collection ID -> Ticket Collection
       ticket_collections=sp.big_map({}, tkey = sp.TNat, tvalue = TTicketCollectionInfo),
 
+      # Ticket Collection ID -> Total Supply
+      token_ticket_collections_supply=sp.big_map({}, tkey = sp.TNat, tvalue = sp.TNat),
+
       # Ticket Collection ID -> Balance (mutez)
       ticket_collection_balances=sp.big_map({}, tkey = sp.TNat, tvalue = sp.TMutez),
 
       # Token ID -> Ticket Collection ID
       token_ticket_collections=sp.big_map({}, tkey = sp.TNat, tvalue = sp.TNat),
-
     )
 
   @sp.entry_point
@@ -85,6 +87,7 @@ class DeTicketFA2(
       purchase_amount_mutez=params.purchase_amount_mutez,
       location=params.location
     )
+    self.data.token_ticket_collections_supply[ticket_collection_id] = 0
     self.data.ticket_collections[ticket_collection_id] = ticket_collection
     self.data.last_ticket_collection_id += 1
 
@@ -95,6 +98,8 @@ class DeTicketFA2(
     collection = sp.compute(self.data.ticket_collections[collection_id])
     total_amount = sp.mul(params.quantity, collection.purchase_amount_mutez)
     sp.verify(sp.amount >= total_amount, message="INSUFFICIENT_AMOUNT")
+    current_collection_supply = self.data.token_ticket_collections_supply[collection_id]
+    sp.verify(current_collection_supply + params.quantity <= collection.max_supply)
     with sp.for_("x", sp.range(0, params.quantity, step = 1)) as x:
       token_owner = sp.sender
       token_id = sp.compute(self.data.last_token_id)
@@ -109,6 +114,7 @@ class DeTicketFA2(
       self.data.token_metadata[token_id] = metadata
       self.data.ledger[token_id] = token_owner
       self.data.token_ticket_collections[token_id] = collection_id
+      self.data.token_ticket_collections_supply[collection_id] += 1
       collection_current_balance = self.data.ticket_collection_balances.get(collection_id, sp.mutez(0))
       self.data.ticket_collection_balances[collection_id] = collection_current_balance + collection.purchase_amount_mutez
       self.data.last_token_id += 1
@@ -140,7 +146,7 @@ class DeTicketFA2(
       location="My Location"
     ))
 
-  @sp.add_test(name="Test Purchase One Ticket")
+  @sp.add_test(name="Test Purchase Tickets")
   def test():
     sc = sp.test_scenario()
     admin = sp.test_account("Contract Admin")
@@ -186,6 +192,52 @@ class DeTicketFA2(
       exception="INSUFFICIENT_AMOUNT",
       sender=buyer,
       amount=sp.mutez(8),
+    )
+
+  @sp.add_test(name="Test Collection Max Supply")
+  def test():
+    sc = sp.test_scenario()
+    admin = sp.test_account("Contract Admin")
+    eventOwner = sp.test_account("Event Owner")
+    buyer = sp.test_account("Buyer")
+    c = DeTicketFA2(
+      admin = admin.address,
+      metadata=sp.big_map(l = {
+        "name" : sp.utils.bytes_of_string("My deTicket NFTs"),
+      })
+    )
+    sc += c
+    sc.verify(c.data.administrator == admin.address)
+    sc.verify(c.data.last_ticket_collection_id == 0)
+    c.create_ticket_collection(mock_test_collection_params(purchase_amount_mutez=sp.mutez(5), name="Rock Show", max_supply=3)).run(valid =True, sender=eventOwner)
+    sc.verify(~c.data.ticket_collection_balances.contains(0))
+    # First Purchase
+    c.purchase_ticket(
+      sp.record(collection_id=0, quantity=1)
+    ).run(
+      valid=True,
+      sender=buyer,
+      amount=sp.mutez(5),
+    )
+    sc.verify(c.data.ledger[0] == buyer.address)
+    sc.verify(c.data.ticket_collection_balances[0] == sp.mutez(5))
+    # Second Purchase
+    c.purchase_ticket(
+      sp.record(collection_id=0, quantity=2)
+    ).run(
+      valid=True,
+      sender=buyer,
+      amount=sp.mutez(10),
+    )
+    sc.verify(c.data.ledger[1] == buyer.address)
+    sc.verify(c.data.ticket_collection_balances[0] == sp.mutez(15)) 
+    # Third Purchase (Exceeds Collection Max Supply)
+    c.purchase_ticket(
+      sp.record(collection_id=0, quantity=1)
+    ).run(
+      valid=False,
+      sender=buyer,
+      amount=sp.mutez(5),
     )
 
 sp.add_compilation_target(
