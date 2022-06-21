@@ -58,7 +58,12 @@ app.get('/', (req, res) => {
 (0, watcher_1.startTezosWatcher)();
 const apiRouter = (0, express_1.Router)();
 apiRouter.get('/collections', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const data = yield db_1.prisma.ticketCollection.findMany(Object.assign(Object.assign({}, (0, paginate_1.getPaginationParams)(req)), { select: {
+    const where = {};
+    const { owner_address } = req.query;
+    if (owner_address) {
+        where.owner = owner_address;
+    }
+    const data = yield db_1.prisma.ticketCollection.findMany(Object.assign(Object.assign({}, (0, paginate_1.getPaginationParams)(req)), { where, select: {
             ticket_collection_id: true,
             name: true,
             owner: true,
@@ -66,6 +71,8 @@ apiRouter.get('/collections', (req, res) => __awaiter(void 0, void 0, void 0, fu
             cover_image: true,
             datetime: true,
             max_supply: true,
+            supply: true,
+            balance_mutez: true,
         } }));
     const count = yield db_1.prisma.ticketCollection.count();
     res.json({ data, count });
@@ -94,6 +101,8 @@ apiRouter.get('/ticket-tokens', (req, res) => __awaiter(void 0, void 0, void 0, 
                     datetime: true,
                     max_supply: true,
                     location: true,
+                    supply: true,
+                    balance_mutez: true,
                 }
             }
         } }));

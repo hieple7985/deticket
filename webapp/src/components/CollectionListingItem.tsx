@@ -1,19 +1,28 @@
-import { FC } from "react";
+import {
+  ExternalLinkIcon,
+  IdentificationIcon,
+  QrcodeIcon,
+} from "@heroicons/react/outline";
+import { FC, useState } from "react";
 import { Link } from "react-router-dom";
 import tezosIconSrc from "../assets/images/tezos-icon.png";
 import { formatTicketDate } from "../utils/date";
 import { ipfsGatewaySrc } from "../utils/ipfs";
 
-export const CollectionListingItem: FC<{ collection: any }> = ({
-  collection,
-}) => {
-  const tezAmount = collection.purchase_amount_mutez / 10**6
+export const CollectionListingItem: FC<{
+  collection: any;
+  isOwner?: boolean;
+}> = ({ collection, isOwner = false }) => {
+  const tezAmount = collection.purchase_amount_mutez / 10 ** 6;
+  const balanceTezAmount = collection.balance_mutez / 10 ** 6;
+  const { supply, max_supply } = collection
+  const supplyProgress = supply * 100 / max_supply
   return (
-    <Link to={`/collections/${collection.ticket_collection_id}`}>    
-      <div
-        key={collection.title}
-        className="flex flex-col rounded-lg shadow-lg overflow-hidden"
-      >
+    <div
+      key={collection.title}
+      className="flex flex-col rounded-lg shadow-lg overflow-hidden"
+    >
+      <Link to={`/collections/${collection.ticket_collection_id}`}>
         <div className="flex-shrink-0">
           <img
             className="h-48 w-full object-cover"
@@ -23,7 +32,9 @@ export const CollectionListingItem: FC<{ collection: any }> = ({
         </div>
         <div className="flex-1 bg-white p-6 flex flex-col justify-between">
           <div className="mt-4 flex space-x-1 text-sm text-gray-500">
-            <time dateTime={collection.datetime}>{formatTicketDate(collection.datetime)}</time>
+            <time dateTime={collection.datetime}>
+              {formatTicketDate(collection.datetime)}
+            </time>
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium text-indigo-600">
@@ -42,11 +53,73 @@ export const CollectionListingItem: FC<{ collection: any }> = ({
                 alt="Tezos"
                 className="w-5 h-5 rounded-full mr-2"
               />
-              {tezAmount}
+              {tezAmount}{" "}
+              <span className="text-gray-500 ml-2">/ per ticket</span>
             </div>
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+      {isOwner && (
+        <>
+          <div className="bg-white border border-t-gray-200 px-6 py-4">
+            <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+              <div className="sm:col-span-1">
+                <dt className="text-sm font-medium text-gray-500">Supply ({collection.supply} / {collection.max_supply})</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  <div className="">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className="bg-blue-600 h-2.5 rounded-full"
+                        style={{ width: `${supplyProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </dd>
+              </div>
+              <div className="sm:col-span-1">
+                <dt className="text-sm font-medium text-gray-500 text-right">
+                  Balance
+                </dt>
+                <dd className="mt-1 text-sm text-gray-900 float-right">
+                  <div className="flex">
+                    <img
+                      src={tezosIconSrc}
+                      alt="Tezos"
+                      className="w-5 h-5 rounded-full mr-2"
+                    />
+                    {balanceTezAmount}
+                  </div>
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <div className="bg-white border border-t-gray-200">
+            <div className="-mt-px flex divide-x divide-gray-200">
+              <div className="w-0 flex-1 flex">
+                <a
+                  onClick={() => {}}
+                  className="cursor-pointer relative -mr-px w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-bl-lg hover:text-gray-500"
+                >
+                  <IdentificationIcon
+                    className="w-5 h-5 text-gray-400"
+                    aria-hidden="true"
+                  />
+                  <span className="ml-3">Gate Scanner</span>
+                </a>
+              </div>
+              <div className="-ml-px w-0 flex-1 flex">
+                <a className="cursor-pointer relative w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg hover:text-gray-500">
+                  <ExternalLinkIcon
+                    className="w-5 h-5 text-gray-400"
+                    aria-hidden="true"
+                  />
+                  <span className="ml-3">Withdraw</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 };

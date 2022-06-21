@@ -12,6 +12,7 @@ import coverImagePlaceholderSrc from "../assets/images/cover-image-placeholder.p
 import moment from "moment";
 import { toast } from "react-toastify";
 import { client } from "../client";
+import { waitForTx } from "../utils/tx";
 
 export const CreateEditCollectionModal: FC<
   Pick<ModalProps, "open" | "setOpen">
@@ -56,14 +57,9 @@ export const CreateEditCollectionModal: FC<
         )
         .send();
       await res.confirmation(1);
-      const s = await contract?.storage<{
-        ticket_collections: any;
-        last_ticket_collection_id: any;
-      }>();
-      const lastTicketNumber = s.last_ticket_collection_id.toNumber();
-      // TODO: Use a better approach to get the created collection id
-      const collectionId = lastTicketNumber - 1;
-      navigate(`/collections/${collectionId}`);
+      await waitForTx(res.opHash)
+      navigate('/my-collections');
+      setOpen(false);
     } catch (error) {
       console.log(error);
     }

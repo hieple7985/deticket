@@ -1,38 +1,31 @@
 import { useWallet } from "@tezos-contrib/react-wallet-provider";
-import { DashboardLayout } from "../../layouts/Dashboard";
-import { useNavigate } from "react-router-dom";
 import { Topbar } from "../../components/Topbar";
 import { CollectionListingItem } from "../../components/CollectionListingItem";
 import { useQuery } from "react-query";
-import { getAllCollections, getMyTickets } from "../../client";
-import { TicketTokenListingItem } from "../../components/TicketTokenListingItem";
-import { useAuth } from "../../hooks/useAuth";
+import { getMyCollections } from "../../client";
 
-export const MyTickets = () => {
+export const MyCollections = () => {
   const { activeAccount } = useWallet()
-  const navigate = useNavigate();
-  const { data } = useQuery(['getMyTickets', activeAccount?.address], getMyTickets, {
+  const { data } = useQuery(['getMyCollections', activeAccount?.address], getMyCollections, {
     enabled: !!activeAccount
   })
-  const { auth } = useAuth()
-  console.log(data)
-  const ticketTokens = data?.data || []
+  const collections = data?.data || []
   return (
     <div className="bg-slate-100 w-screen h-screen">
       <Topbar />
       <div className="relative max-w-7xl mx-auto">
         <div className="mt-8">
           <h2 className="text-2xl tracking-tight font-extrabold text-gray-900 sm:text-2xl">
-            My Tickets
+            My Collections
           </h2>
           <p className="mt-3 text-md text-gray-500 sm:mt-4">
-            List of all tickets you've purchased
+            List of all collections you have created
           </p>
         </div>
 
         <div className="mt-8 max-w-lg mx-auto grid gap-5 lg:grid-cols-3 lg:max-w-none">
-          {ticketTokens.map((ticketToken: any) => (
-            <TicketTokenListingItem ticketToken={ticketToken} auth={auth} />
+          {collections.map((collection: any) => (
+            <CollectionListingItem collection={collection} isOwner />
           ))}
         </div>
       </div>

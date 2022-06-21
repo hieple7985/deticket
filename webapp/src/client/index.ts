@@ -19,6 +19,17 @@ export const getAllCollections = async () => {
   return data
 }
 
+export const getMyCollections: QueryFunction<any> = async ({ queryKey }) => {
+  const [, ownerAddress] = queryKey
+  const { data } = await client.get('/collections', {
+    params: {
+      owner_address: ownerAddress,
+    }
+  })
+  return data
+}
+
+
 
 export const getMyTickets: QueryFunction<any> = async ({ queryKey }) => {
   const [, ownerAddress] = queryKey

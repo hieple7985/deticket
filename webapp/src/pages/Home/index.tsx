@@ -19,8 +19,7 @@ export const HomeIndex = () => {
             Next Events
           </h2>
           <p className="mt-3 text-md text-gray-500 sm:mt-4">
-            Nullam risus blandit ac aliquam justo ipsum. Quam mauris volutpat
-            massa dictumst amet. Sapien tortor lacus arcu.
+            List of all upcoming events
           </p>
         </div>
 

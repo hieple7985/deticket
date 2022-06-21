@@ -83,6 +83,7 @@ const syncSingleToken = async (storage: any, tokenId: number) => {
       token_id: tokenId,
     }
   })
+  await syncCollection(storage, collection.ticket_collection_id)
 }
 
 const syncCollection = async (storage: any, collectionTokenId: number) => {
@@ -91,6 +92,10 @@ const syncCollection = async (storage: any, collectionTokenId: number) => {
   const purchase_amount_mutez = collection.purchase_amount_mutez.toNumber()
   const max_supply = collection.max_supply.toNumber()
   const datetime = collection.datetime.toNumber()
+  const [supply, balance] = await Promise.all([
+    storage.token_ticket_collections_supply.get(collectionTokenId),
+    storage.ticket_collection_balances.get(collectionTokenId),
+  ])
   return prisma.ticketCollection.upsert({
     create: {
       ticket_collection_id: collectionTokenId,
@@ -99,6 +104,8 @@ const syncCollection = async (storage: any, collectionTokenId: number) => {
       purchase_amount_mutez,
       cover_image: collection.cover_image,
       datetime: new Date(datetime*1000),
+      supply: supply?.toNumber() || 0,
+      balance_mutez: balance?.toNumber() || 0,
       max_supply,
       location: collection.location || '',
     },
@@ -106,6 +113,8 @@ const syncCollection = async (storage: any, collectionTokenId: number) => {
       name,
       owner,
       purchase_amount_mutez,
+      supply: supply?.toNumber() || 0,
+      balance_mutez: balance?.toNumber() || 0,
     },
     where: {
       ticket_collection_id: collectionTokenId,

@@ -9,7 +9,6 @@ import { uploadImageToIPFS } from './ipfs';
 import { v4 as uuidv4 } from 'uuid';
 import { verifyUserSignature } from './utils/verifySignature';
 import { generateSignaturePayloadBytes } from './utils/generateSignaturePayloadBytes';
-import { json } from 'stream/consumers';
 import { getLoggerUserAddress } from './utils/getLoggerUser';
 import { checkTokenOwnership } from './utils/checkTokenOwnership';
 
@@ -29,8 +28,14 @@ startTezosWatcher()
 const apiRouter = Router()
 
 apiRouter.get('/collections', async (req: Request, res: Response) => {
+  const where: Prisma.TicketCollectionWhereInput = {}
+  const { owner_address } = req.query
+  if (owner_address) {
+    where.owner = owner_address as string
+  }
   const data = await prisma.ticketCollection.findMany({
     ...getPaginationParams(req),
+    where,
     select: {
       ticket_collection_id: true,
       name: true,
@@ -39,6 +44,8 @@ apiRouter.get('/collections', async (req: Request, res: Response) => {
       cover_image: true,
       datetime: true,
       max_supply: true,
+      supply: true,
+      balance_mutez: true,
     }
   })
   const count = await prisma.ticketCollection.count()
@@ -73,6 +80,8 @@ apiRouter.get('/ticket-tokens', async (req: Request, res: Response) => {
           datetime: true,
           max_supply: true,
           location: true,
+          supply: true,
+          balance_mutez: true,
         }
       }
     }

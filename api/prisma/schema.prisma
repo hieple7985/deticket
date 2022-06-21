@@ -34,7 +34,9 @@ model TicketCollection {
   name                  String
   purchase_amount_mutez Int
   cover_image           String
+  supply                Int
   max_supply            Int
+  balance_mutez         Int
   datetime              DateTime
   ticket_tokens         TicketTokens[]
   location              String
