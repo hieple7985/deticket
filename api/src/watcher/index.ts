@@ -18,6 +18,11 @@ interface TransactionData {
   }
 }
 
+const getWithdrawCollectionId = (withdrawValue: any): number => {
+  const idStr = withdrawValue.args[1].int
+  return parseInt(idStr)
+}
+
 const getTransferedTokenIds = (transferValue: any): number[] => {
   const tokenIds: number[] = []
   transferValue.forEach((batchRootItem: any) => {
@@ -186,6 +191,9 @@ export const startTezosWatcher = () => {
       await syncNewCollections()
     } else if (entrypoint === 'purchase_ticket') {
       await syncNewTokens()
+    } else if (entrypoint === 'withdraw_collection') {
+      const collectionId = getWithdrawCollectionId(value)
+      await syncMultipleCollections([collectionId])
     }
     await prisma.transaction.create({
       data: {
