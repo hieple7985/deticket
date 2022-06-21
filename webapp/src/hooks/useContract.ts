@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useTezos } from "./useTezos";
 
 // TODO: Make contract address configurable
-const CONTRACT_ADDRESS = 'KT1ARttgRAfMtpb7xaBdnjnS6toxebGaDyCH'
+const CONTRACT_ADDRESS = 'KT1Neoqn95o1Ukczv9mUYzcmAyuKQJFbqhBT'
 
 
 type DefaultMethods = Record<string, (...args: any[]) => ContractMethod<Wallet>>
