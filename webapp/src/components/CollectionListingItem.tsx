@@ -8,11 +8,14 @@ import { Link } from "react-router-dom";
 import tezosIconSrc from "../assets/images/tezos-icon.png";
 import { formatTicketDate } from "../utils/date";
 import { ipfsGatewaySrc } from "../utils/ipfs";
+import { WithdrawModal } from "./WithdrawModal";
 
 export const CollectionListingItem: FC<{
   collection: any;
   isOwner?: boolean;
-}> = ({ collection, isOwner = false }) => {
+  refetch: () => any,
+}> = ({ collection, isOwner = false, refetch }) => {
+  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false)
   const tezAmount = collection.purchase_amount_mutez / 10 ** 6;
   const balanceTezAmount = collection.balance_mutez / 10 ** 6;
   const { supply, max_supply } = collection
@@ -61,6 +64,12 @@ export const CollectionListingItem: FC<{
       </Link>
       {isOwner && (
         <>
+          <WithdrawModal
+            collection={collection}
+            open={withdrawModalOpen}
+            setOpen={setWithdrawModalOpen}
+            refetch={refetch}
+          />
           <div className="bg-white border border-t-gray-200 px-6 py-4">
             <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
               <div className="sm:col-span-1">
@@ -108,7 +117,7 @@ export const CollectionListingItem: FC<{
                 </a>
               </div>
               <div className="-ml-px w-0 flex-1 flex">
-                <a className="cursor-pointer relative w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg hover:text-gray-500">
+                <a onClick={() => setWithdrawModalOpen(true)} className="cursor-pointer relative w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg hover:text-gray-500">
                   <ExternalLinkIcon
                     className="w-5 h-5 text-gray-400"
                     aria-hidden="true"

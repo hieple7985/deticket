@@ -6,7 +6,7 @@ import { getMyCollections } from "../../client";
 
 export const MyCollections = () => {
   const { activeAccount } = useWallet()
-  const { data } = useQuery(['getMyCollections', activeAccount?.address], getMyCollections, {
+  const { data, refetch } = useQuery(['getMyCollections', activeAccount?.address], getMyCollections, {
     enabled: !!activeAccount
   })
   const collections = data?.data || []
@@ -25,7 +25,7 @@ export const MyCollections = () => {
 
         <div className="mt-8 max-w-lg mx-auto grid gap-5 lg:grid-cols-3 lg:max-w-none">
           {collections.map((collection: any) => (
-            <CollectionListingItem collection={collection} isOwner />
+            <CollectionListingItem collection={collection} refetch={refetch} isOwner />
           ))}
         </div>
       </div>

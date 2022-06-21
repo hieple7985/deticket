@@ -8,7 +8,7 @@ import { getAllCollections } from "../../client";
 
 export const HomeIndex = () => {
   const navigate = useNavigate();
-  const { data } = useQuery('getAllCollections', getAllCollections)
+  const { data, refetch } = useQuery('getAllCollections', getAllCollections)
   const collections = data?.data || []
   return (
     <div className="bg-slate-100 w-screen h-screen">
@@ -25,7 +25,7 @@ export const HomeIndex = () => {
 
         <div className="mt-8 max-w-lg mx-auto grid gap-5 lg:grid-cols-3 lg:max-w-none">
           {collections.map((collection: any) => (
-            <CollectionListingItem collection={collection} />
+            <CollectionListingItem collection={collection} refetch={refetch} />
           ))}
         </div>
       </div>
