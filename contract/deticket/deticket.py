@@ -1,3 +1,4 @@
+from logging import exception
 import smartpy as sp
 import os
 FA2 = sp.io.import_script_from_url("https://smartpy.io/templates/fa2_lib.py")
@@ -22,6 +23,11 @@ TCreateCollectionParams = sp.TRecord(
   location = sp.TString,
   max_supply = sp.TNat,
   purchase_amount_mutez = sp.TMutez,
+)
+
+TWithdrawParams = sp.TRecord(
+  collection_id=sp.TNat,
+  amount=sp.TMutez
 )
 
 TPurchaseTicketParams = sp.TRecord(
@@ -88,8 +94,19 @@ class DeTicketFA2(
       location=params.location
     )
     self.data.token_ticket_collections_supply[ticket_collection_id] = 0
+    self.data.ticket_collection_balances[ticket_collection_id] = sp.tez(0)
     self.data.ticket_collections[ticket_collection_id] = ticket_collection
     self.data.last_ticket_collection_id += 1
+
+  @sp.entry_point
+  def withdraw_collection(self, params):
+    sp.set_type(params, TWithdrawParams)
+    collection = self.data.ticket_collections[params.collection_id]
+    balance = self.data.ticket_collection_balances[params.collection_id]
+    sp.verify(collection.owner == sp.sender, message="NOT_OWNER")
+    sp.verify(params.amount <= balance, message="NOT_ENOUGH_BALANCE")
+    sp.send(collection.owner, params.amount)
+    self.data.ticket_collection_balances[params.collection_id] -= params.amount
 
   @sp.entry_point
   def purchase_ticket(self, params):
@@ -162,7 +179,7 @@ class DeTicketFA2(
     sc.verify(c.data.administrator == admin.address)
     sc.verify(c.data.last_ticket_collection_id == 0)
     c.create_ticket_collection(mock_test_collection_params(purchase_amount_mutez=sp.mutez(5), name="Rock Show")).run(valid =True, sender=eventOwner)
-    sc.verify(~c.data.ticket_collection_balances.contains(0))
+    sc.verify(c.data.ticket_collection_balances[0] == sp.mutez(0)) 
     # First Purchase
     c.purchase_ticket(
       sp.record(collection_id=0, quantity=1)
@@ -210,7 +227,7 @@ class DeTicketFA2(
     sc.verify(c.data.administrator == admin.address)
     sc.verify(c.data.last_ticket_collection_id == 0)
     c.create_ticket_collection(mock_test_collection_params(purchase_amount_mutez=sp.mutez(5), name="Rock Show", max_supply=3)).run(valid =True, sender=eventOwner)
-    sc.verify(~c.data.ticket_collection_balances.contains(0))
+    sc.verify(c.data.ticket_collection_balances[0] == sp.mutez(0)) 
     # First Purchase
     c.purchase_ticket(
       sp.record(collection_id=0, quantity=1)
@@ -239,6 +256,32 @@ class DeTicketFA2(
       sender=buyer,
       amount=sp.mutez(5),
     )
+    # Withdraw collection as buyer (Should fail)
+    c.withdraw_collection(
+      sp.record(collection_id=0, amount=sp.mutez(10))
+    ).run(
+      valid=False,
+      exception="NOT_OWNER",
+      sender=buyer,
+    )
+    # Withdraw by owner with amount greater than the collection balance (Should fail)
+    c.withdraw_collection(
+      sp.record(collection_id=0, amount=sp.mutez(50))
+    ).run(
+      valid=False,
+      exception="NOT_ENOUGH_BALANCE",
+      sender=eventOwner,
+    )
+    # Withdraw by owner with amount lower than the collection balance (Should pass)
+    sc.verify(c.data.ticket_collection_balances[0] == sp.mutez(15)) 
+    c.withdraw_collection(
+      sp.record(collection_id=0, amount=sp.mutez(10))
+    ).run(
+      valid=True,
+      sender=eventOwner,
+    )
+    sc.verify(c.data.ticket_collection_balances[0] == sp.mutez(5)) 
+
 
 sp.add_compilation_target(
     "de_ticket_nft_tokens",
