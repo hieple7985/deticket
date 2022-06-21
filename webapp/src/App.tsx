@@ -3,6 +3,7 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { WalletProvider } from "@tezos-contrib/react-wallet-provider";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import 'animate.css';
 import 'react-dates/initialize';
 
 // Page Components

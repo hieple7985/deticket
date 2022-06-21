@@ -1,9 +1,10 @@
-import { createRef, FC } from "react";
+import { createRef, FC, useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import { formatTicketDate } from "../utils/date";
 import { ipfsGatewaySrc } from "../utils/ipfs";
 import html2pdf from 'html2pdf.js'
 import { DocumentDownloadIcon, XIcon } from "@heroicons/react/outline";
+import classNames from "classnames";
 
 interface TicketTokenPreviewProps {
   ticketToken: any
@@ -14,10 +15,12 @@ interface TicketTokenPreviewProps {
 }
 
 export const TicketTokenPreview: FC<TicketTokenPreviewProps> = ({ ticketToken, collection, show, ticketAccessToken, setShow }) => {
+  const [animateFinished, setAnimateFinished] = useState(false);
   if (!show || !ticketAccessToken) {
     return null
   }
   const generatePDF = () => {
+    setAnimateFinished(true)
     var element = document.getElementById('ticket-preview');
     html2pdf().from(element).set({
       filename:     `deTicket-${ticketToken.name}`,
@@ -26,13 +29,19 @@ export const TicketTokenPreview: FC<TicketTokenPreviewProps> = ({ ticketToken, c
       jsPDF:        { unit: 'px', format: [1000,400], orientation: 'landscape' }
     }).save();
   }
+  const cardClassNames = classNames(
+    'bg-white overflow-hidden rounded-lg sm:shadow',
+    {
+      'animate__animated animate__flipInX': !animateFinished,
+    }
+  )
   return (
-    <div className="bg-gray-900 min-w-[800px] min-h-[400px] w-screen h-screen flex items-center justify-center fixed top-0 left-0 z-50">
+    <div style={{ background: 'radial-gradient(#434343, #151515)'}} className="min-w-[800px] min-h-[400px] w-screen h-screen flex items-center justify-center fixed top-0 left-0 z-50">
       <button className="absolute top-[32px] right-[32px] text-white" onClick={() => setShow(false)}>
         <XIcon className="h-8 w-8" />
       </button>
       <div>      
-        <div id="ticket-preview" className="bg-white overflow-hidden rounded-lg sm:shadow">
+        <div id="ticket-preview" className={cardClassNames}>
           <div className="flex">
             <div>
               <div className="bg-white px-4 py-5 border-b border-gray-200 sm:px-6 w-[480px]">
@@ -86,7 +95,7 @@ export const TicketTokenPreview: FC<TicketTokenPreviewProps> = ({ ticketToken, c
             </div>
           </div>
         </div>
-        <div className="w-full flex items-center justify-center mt-4">
+        <div className="w-full flex items-center justify-center mt-12">
           <button
             onClick={() => generatePDF()}
             className="inline-flex items-center text-lg px-4 py-2 border border-gray-300 rounded-md shadow-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
