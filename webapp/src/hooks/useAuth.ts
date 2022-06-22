@@ -7,6 +7,7 @@ import { RequestSignPayloadInput, SigningType } from "@airgap/beacon-sdk";
 interface UseAuth {
   auth: () => Promise<string> // token
   token: string | null,
+  headers: { authorization?: string },
 }
 
 
@@ -55,8 +56,13 @@ export const useAuth = (): UseAuth => {
     setToken(data.token)
     return data.token
   }
+  const headers: UseAuth['headers'] = {}
+  if (token) {
+    headers.authorization = `Bearer ${token}`
+  }
   return {
     auth,
     token: token || null,
+    headers,
   }
 }

@@ -11,6 +11,7 @@ import { verifyUserSignature } from './utils/verifySignature';
 import { generateSignaturePayloadBytes } from './utils/generateSignaturePayloadBytes';
 import { getLoggerUserAddress } from './utils/getLoggerUser';
 import { checkTokenOwnership } from './utils/checkTokenOwnership';
+import { getContract } from './tezos';
 
 dotenv.config();
 
@@ -219,6 +220,94 @@ apiRouter.post('/issue-ticket-token', async (req: Request, res: Response) => {
     }
   })
   return res.json({ token })
+})
+
+apiRouter.post('/gate-scan-verify', async (req: Request, res: Response) => {
+  const loggedUserAddress = await getLoggerUserAddress(req)
+  if (!loggedUserAddress) {
+    return res.sendStatus(401)
+  }
+  const { token, ticket_collection_id } = req.body
+  const ticketAccessToken = await prisma.ticketAccessToken.findUnique({
+    where: {
+      token,
+    },
+  })
+
+  if (!ticketAccessToken) {
+    return res.json({
+      authorized: false,
+      reason: 'Token not found',
+    })
+  }
+
+  const ticket = await prisma.ticketTokens.findUnique({
+    where: {
+      token_id: ticketAccessToken.ticket_token_id,
+    },
+    include: {
+      collection: true,
+    }
+  })
+
+  if (!ticket) {
+    return res.json({
+      authorized: false,
+      reason: 'Could not find ticket',
+    })
+  }
+
+  if (ticket.collection.owner !== loggedUserAddress) {
+    return res.sendStatus(403)
+  }
+
+  if (ticket.collection.ticket_collection_id !== ticket_collection_id) {
+    return res.json({
+      authorized: false,
+      reason: 'Unrecognized ticket for this collection',
+    })
+  }
+
+  const { ticket_token_id } = ticketAccessToken
+
+  const gateScanConfirmationCount = await prisma.gateScanConfirmation.count({
+    where: {
+      ticket_token_id: ticket_token_id,
+    }
+  })
+
+  if (gateScanConfirmationCount > 0) {
+    // TODO: Skip this if the ticket type is MEMBERSHIP or SEASON_PASS
+    return res.json({
+      authorized: false,
+      reason: `Ticket #${ticket_token_id} already used`,
+    })
+  }
+
+  // Verify On-Chain Ownership
+  const contract = await getContract()
+  const s = await contract.storage<{ ledger: any }>()
+  const onChainOwnerAddress = await s.ledger.get(ticket_token_id)
+  if (onChainOwnerAddress !== ticketAccessToken.owner_address) {
+    return res.json({
+      authorized: false,
+      reason: 'Ownership verification failed',
+    })
+  }
+
+  // Create Gate Scan Confirmation
+  await prisma.gateScanConfirmation.create({
+    data: {
+      address: onChainOwnerAddress,
+      ticket_token_id: ticketAccessToken.ticket_token_id,
+      entry_at: new Date(),
+    }
+  })
+
+  return res.json({
+    authorized: true,
+    token_id: ticket.token_id,
+  })
 })
 
 app.use('/api', apiRouter)

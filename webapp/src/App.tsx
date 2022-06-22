@@ -16,6 +16,7 @@ import { QueryClientProvider } from "react-query";
 import { queryClient } from "./client";
 import { MyTickets } from "./pages/MyTickets";
 import { MyCollections } from "./pages/MyCollections";
+import { GateScanner } from "./pages/GateScanner";
 
 const WP = WalletProvider as any;
 
@@ -32,6 +33,7 @@ function App() {
               <Route path="/new-collection" element={<CollectionsNew />} />
               <Route path="/my-tickets" element={<MyTickets />} />
               <Route path="/my-collections" element={<MyCollections />} />
+              <Route path="/gate-scanner/:collectionId" element={<GateScanner />} />
               <Route
                 path="/collections/:collectionId"
                 element={<CollectionView />}
