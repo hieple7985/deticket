@@ -20,11 +20,12 @@ export const CreateEditCollectionModal: FC<
   const [date, setDate] = useState<any>();
   const [time, setTime] = useState<any>("12:00");
   const [ampm, setAmpm] = useState<any>("AM");
-  const [location, setLocation] = useState('')
+  const [location, setLocation] = useState("");
   const [coverImageBase64, setCoverImageBase64] = useState<string | null>(null);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [totalSupply, setTotalSupply] = useState("1000");
   const [dateFocused, setDateFocused] = useState(false);
+  const [type, setType] = useState('ADMIT_ONE');
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -48,17 +49,18 @@ export const CreateEditCollectionModal: FC<
       const amountNumber = Math.round(parseFloat(amount) * 10 ** 6);
       const res = await contract?.methods
         .create_ticket_collection(
-          coverImage || '',
+          coverImage || "",
           getDatetimeUnixTime(),
           location,
           parseInt(totalSupply),
           name,
-          amountNumber
+          amountNumber,
+          type,
         )
         .send();
       await res.confirmation(1);
-      await waitForTx(res.opHash)
-      navigate('/my-collections');
+      await waitForTx(res.opHash);
+      navigate("/my-collections");
       setOpen(false);
     } catch (error) {
       console.log(error);
@@ -95,11 +97,11 @@ export const CreateEditCollectionModal: FC<
       const imageBase64 = await getImageBase64(e.target.files![0]);
       console.log(imageBase64);
       setCoverImageBase64(imageBase64);
-      const { data } = await client.post('/upload-image', {
+      const { data } = await client.post("/upload-image", {
         imageBase64,
-      })
+      });
       setCoverImage(data.url);
-      console.log(data.url)
+      console.log(data.url);
     } catch (error: any) {
       if (error.message === "INVALID_IMAGE") {
         toast.error("Images should have png, jpeg or webp format up to 1mb");
@@ -133,6 +135,25 @@ export const CreateEditCollectionModal: FC<
                 </div>
               </div>
 
+              <div className="sm:col-span-3 mt-6">
+                <label
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Type
+                </label>
+                <div className="mt-1">
+                  <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  >
+                    <option value="ADMIT_ONE">Admit One</option>
+                    <option value="MEMBERSHIP">Membership</option>
+                    <option value="SEASON_PASS">Season Pass</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="mt-6">
                 <label className="block text-sm font-medium text-gray-700">
                   Image
@@ -140,7 +161,9 @@ export const CreateEditCollectionModal: FC<
                 <div
                   className="bg-cover w-full h-32 bg-center"
                   style={{
-                    backgroundImage: `url(${coverImageBase64 || coverImagePlaceholderSrc})`,
+                    backgroundImage: `url(${
+                      coverImageBase64 || coverImagePlaceholderSrc
+                    })`,
                   }}
                 ></div>
                 <label

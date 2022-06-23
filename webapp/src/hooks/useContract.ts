@@ -3,10 +3,22 @@ import { useEffect, useState } from "react";
 import { useTezos } from "./useTezos";
 
 // TODO: Make contract address configurable
-const CONTRACT_ADDRESS = 'KT1SK1xJAiXw1b9tFsboTXzYoCGGd9cS4fHu'
+const CONTRACT_ADDRESS = 'KT1GUHb2PJsWATBsbmTxZjZ9bNgzhAySCTfF'
 
 
 type DefaultMethods = Record<string, (...args: any[]) => ContractMethod<Wallet>>
+
+
+interface TransferTx {
+  to_: string
+  token_id: number
+  amount: number
+}
+
+interface TransferParam {
+  from_: string
+  txs: TransferTx[]
+}
 
 interface TMethods extends DefaultMethods {
   create_ticket_collection: (
@@ -16,9 +28,12 @@ interface TMethods extends DefaultMethods {
     max_supply: number,
     name: string,
     purchase_amount_mutez: number,
+    ticket_type: string,
   ) => ContractMethod<Wallet>;
   purchase_ticket: (ticket_collection_id: number, quantity: number) => ContractMethod<Wallet>;
   withdraw_collection: (amount: number, collection_id: number) => ContractMethod<Wallet>;
+  transfer: (params: TransferParam[]) => ContractMethod<Wallet>;
+  set_ticket_collection_verified: (ticket_collection_id: number, verified: boolean) => ContractMethod<Wallet>;
   [key: string]: any;
 }
 

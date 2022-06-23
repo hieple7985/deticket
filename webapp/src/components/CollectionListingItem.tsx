@@ -9,17 +9,19 @@ import tezosIconSrc from "../assets/images/tezos-icon.png";
 import { formatTicketDate } from "../utils/date";
 import { ipfsGatewaySrc } from "../utils/ipfs";
 import { WithdrawModal } from "./WithdrawModal";
+import verifiedIconSrc from "../assets/images/verified-icon.svg";
+import { getTicketTypeLabel } from "../utils/ticket";
 
 export const CollectionListingItem: FC<{
   collection: any;
   isOwner?: boolean;
-  refetch: () => any,
+  refetch: () => any;
 }> = ({ collection, isOwner = false, refetch }) => {
-  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false)
+  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const tezAmount = collection.purchase_amount_mutez / 10 ** 6;
   const balanceTezAmount = collection.balance_mutez / 10 ** 6;
-  const { supply, max_supply } = collection
-  const supplyProgress = supply * 100 / max_supply
+  const { supply, max_supply } = collection;
+  const supplyProgress = (supply * 100) / max_supply;
   return (
     <div
       key={collection.title}
@@ -34,18 +36,27 @@ export const CollectionListingItem: FC<{
           />
         </div>
         <div className="flex-1 bg-white p-6 flex flex-col justify-between">
+          <div>
+            <span className="text-xs font-medium text-gray-500 bg-gray-200 inline py-1 px-2 rounded-full">
+              {getTicketTypeLabel(collection.ticket_type)}
+            </span>
+          </div>
           <div className="mt-4 flex space-x-1 text-sm text-gray-500">
             <time dateTime={collection.datetime}>
               {formatTicketDate(collection.datetime)}
             </time>
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-indigo-600">
-              <span className="hover:underline">{collection.type}</span>
-            </p>
             <a href={""} className="block mt-2">
-              <p className="text-xl font-semibold text-gray-900">
+              <p className="text-xl font-semibold text-gray-900 flex text-ellipsis items-center">
                 {collection.name}
+                {collection.verified && (
+                  <img
+                    src={verifiedIconSrc}
+                    alt="Ticket Collection Verified"
+                    className="w-4 h-4 ml-2"
+                  />
+                )}
               </p>
             </a>
           </div>
@@ -73,7 +84,9 @@ export const CollectionListingItem: FC<{
           <div className="bg-white border border-t-gray-200 px-6 py-4">
             <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
               <div className="sm:col-span-1">
-                <dt className="text-sm font-medium text-gray-500">Supply ({collection.supply} / {collection.max_supply})</dt>
+                <dt className="text-sm font-medium text-gray-500">
+                  Supply ({collection.supply} / {collection.max_supply})
+                </dt>
                 <dd className="mt-1 text-sm text-gray-900">
                   <div className="">
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -117,7 +130,10 @@ export const CollectionListingItem: FC<{
                 </Link>
               </div>
               <div className="-ml-px w-0 flex-1 flex">
-                <a onClick={() => setWithdrawModalOpen(true)} className="cursor-pointer relative w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg hover:text-gray-500">
+                <a
+                  onClick={() => setWithdrawModalOpen(true)}
+                  className="cursor-pointer relative w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg hover:text-gray-500"
+                >
                   <ExternalLinkIcon
                     className="w-5 h-5 text-gray-400"
                     aria-hidden="true"

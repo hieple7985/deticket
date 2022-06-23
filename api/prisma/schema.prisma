@@ -40,6 +40,8 @@ model TicketCollection {
   datetime              DateTime
   ticket_tokens         TicketTokens[]
   location              String
+  ticket_type           String
+  verified              Boolean
 }
 
 model UserAccessToken {

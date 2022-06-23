@@ -23,6 +23,11 @@ const getWithdrawCollectionId = (withdrawValue: any): number => {
   return parseInt(idStr)
 }
 
+const getSetTicketCollectionVerifiedCollectionId = (withdrawValue: any): number => {
+  const idStr = withdrawValue.args[0].int
+  return parseInt(idStr)
+}
+
 const getTransferedTokenIds = (transferValue: any): number[] => {
   const tokenIds: number[] = []
   transferValue.forEach((batchRootItem: any) => {
@@ -113,6 +118,8 @@ const syncCollection = async (storage: any, collectionTokenId: number) => {
       balance_mutez: balance?.toNumber() || 0,
       max_supply,
       location: collection.location || '',
+      ticket_type: collection.ticket_type,
+      verified: collection.verified,
     },
     update: {
       name,
@@ -120,6 +127,7 @@ const syncCollection = async (storage: any, collectionTokenId: number) => {
       purchase_amount_mutez,
       supply: supply?.toNumber() || 0,
       balance_mutez: balance?.toNumber() || 0,
+      verified: collection.verified,
     },
     where: {
       ticket_collection_id: collectionTokenId,
@@ -193,6 +201,9 @@ export const startTezosWatcher = () => {
       await syncNewTokens()
     } else if (entrypoint === 'withdraw_collection') {
       const collectionId = getWithdrawCollectionId(value)
+      await syncMultipleCollections([collectionId])
+    } else if (entrypoint === 'set_ticket_collection_verified') {
+      const collectionId = await getSetTicketCollectionVerifiedCollectionId(value)
       await syncMultipleCollections([collectionId])
     }
     await prisma.transaction.create({

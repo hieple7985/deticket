@@ -14,6 +14,8 @@ TTicketCollectionInfo = sp.TRecord(
   location = sp.TString,
   max_supply = sp.TNat,
   purchase_amount_mutez = sp.TMutez,
+  ticket_type = sp.TString,
+  verified = sp.TBool
 )
 
 TCreateCollectionParams = sp.TRecord(
@@ -23,6 +25,7 @@ TCreateCollectionParams = sp.TRecord(
   location = sp.TString,
   max_supply = sp.TNat,
   purchase_amount_mutez = sp.TMutez,
+  ticket_type = sp.TString
 )
 
 TWithdrawParams = sp.TRecord(
@@ -35,13 +38,19 @@ TPurchaseTicketParams = sp.TRecord(
   quantity=sp.TNat
 )
 
+TSetTicketCollectionVerifiedParams = sp.TRecord(
+  ticket_collection_id=sp.TNat,
+  verified=sp.TBool,
+)
+
 def mock_test_collection_params(
   name = "My Ticket Collection",
   cover_image = "ipfs://mocked-ipfs-uri",
   datetime = 1655673791, # Sun Jun 19 2022 21:23:11 GMT+0000
   max_supply = 1000,
   purchase_amount_mutez = sp.mutez(5),
-  location = "My Location"
+  location = "My Location",
+  ticket_type = "ADMIT_ONE"
 ):
   return sp.record(
     name=name,
@@ -49,7 +58,8 @@ def mock_test_collection_params(
     datetime=datetime,
     max_supply=max_supply,
     purchase_amount_mutez=purchase_amount_mutez,
-    location=location
+    location=location,
+    ticket_type=ticket_type
   )
 
 
@@ -80,9 +90,19 @@ class DeTicketFA2(
     )
 
   @sp.entry_point
+  def set_ticket_collection_verified(self, params):
+    sp.set_type(params, TSetTicketCollectionVerifiedParams)
+    sp.verify(self.is_administrator(sp.sender), "NOT_ADMIN")
+    ticket_collection = self.data.ticket_collections[params.ticket_collection_id]
+    ticket_collection.verified = params.verified
+
+  @sp.entry_point
   def create_ticket_collection(self, params):
     sp.set_type(params, TCreateCollectionParams)
     ticket_collection_id = sp.compute(self.data.last_ticket_collection_id)
+    ticket_type = params.ticket_type
+    sp.if (ticket_type != "ADMIT_ONE") & (ticket_type != "MEMBERSHIP") & (ticket_type != "SEASON_PASS"):
+      ticket_type = "ADMIT_ONE"
     ticket_collection = sp.record(
       id=ticket_collection_id,
       owner=sp.sender,
@@ -91,7 +111,9 @@ class DeTicketFA2(
       datetime=params.datetime,
       max_supply=params.max_supply,
       purchase_amount_mutez=params.purchase_amount_mutez,
-      location=params.location
+      location=params.location,
+      ticket_type=params.ticket_type,
+      verified=False
     )
     self.data.token_ticket_collections_supply[ticket_collection_id] = 0
     self.data.ticket_collection_balances[ticket_collection_id] = sp.tez(0)
@@ -160,7 +182,9 @@ class DeTicketFA2(
       datetime=1655673791, # Sun Jun 19 2022 21:23:11 GMT+0000
       max_supply=1000,
       purchase_amount_mutez=sp.mutez(5),
-      location="My Location"
+      location="My Location",
+      ticket_type = "ADMIT_ONE",
+      verified = False
     ))
 
   @sp.add_test(name="Test Purchase Tickets")

@@ -47,6 +47,11 @@ apiRouter.get('/collections', async (req: Request, res: Response) => {
       max_supply: true,
       supply: true,
       balance_mutez: true,
+      ticket_type: true,
+      verified: true,
+    },
+    orderBy: {
+      datetime: 'asc',
     }
   })
   const count = await prisma.ticketCollection.count()
@@ -68,6 +73,11 @@ apiRouter.get('/ticket-tokens', async (req: Request, res: Response) => {
   const data = await prisma.ticketTokens.findMany({
     ...getPaginationParams(req),
     where,
+    orderBy: {
+      collection: {
+        datetime: 'asc',
+      }
+    },
     select: {
       token_id: true,
       name: true,
@@ -83,6 +93,8 @@ apiRouter.get('/ticket-tokens', async (req: Request, res: Response) => {
           location: true,
           supply: true,
           balance_mutez: true,
+          ticket_type: true,
+          verified: true,
         }
       }
     }
@@ -276,8 +288,7 @@ apiRouter.post('/gate-scan-verify', async (req: Request, res: Response) => {
     }
   })
 
-  if (gateScanConfirmationCount > 0) {
-    // TODO: Skip this if the ticket type is MEMBERSHIP or SEASON_PASS
+  if (ticket.collection.ticket_type === 'ADMIT_ONE' && gateScanConfirmationCount > 0) {
     return res.json({
       authorized: false,
       reason: `Ticket #${ticket_token_id} already used`,

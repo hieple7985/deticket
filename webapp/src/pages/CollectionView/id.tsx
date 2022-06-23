@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCollection } from "../../hooks/useCollection";
 import tezosIconSrc from "../../assets/images/tezos-icon.png";
 import verifiedIconSrc from "../../assets/images/verified-icon.svg";
@@ -7,8 +7,9 @@ import { useEffect, useState } from "react";
 import { waitForTx } from "../../utils/tx";
 import { ipfsGatewaySrc } from "../../utils/ipfs";
 import { formatTicketDate } from "../../utils/date";
-import { useWallet } from "@tezos-contrib/react-wallet-provider";
-import { ExclamationIcon } from "@heroicons/react/outline";
+import { ChevronLeftIcon, ExclamationIcon } from "@heroicons/react/outline";
+import { getTicketTypeLabel } from "../../utils/ticket";
+import { CollectionAdminOptions } from "../../components/CollectionAdminOptions";
 
 export const CollectionView = () => {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export const CollectionView = () => {
         const supply = await s?.token_ticket_collections_supply.get(
           parseInt(collectionId)
         );
-        setSupply(supply.toNumber());
+        setSupply(supply ? supply.toNumber() : 0);
       })();
     }
   }, [collectionId, contract, setSupply]);
@@ -77,7 +78,7 @@ export const CollectionView = () => {
   const total = tezAmount * quantityInt;
   const exceededSupply = quantityInt + supply > maxSupply;
   const soldOut = supply === maxSupply;
-  const availableTickets = maxSupply - supply
+  const availableTickets = maxSupply - supply;
   const renderPurchaseOptions = () => {
     if (soldOut) {
       return (
@@ -125,7 +126,8 @@ export const CollectionView = () => {
           </select>
           {quantityInt > availableTickets && availableTickets > 0 && (
             <div className="text-sm text-red-600 mt-2">
-              Only {availableTickets} ticket{availableTickets > 1 ? 's are': ' is'} available.
+              Only {availableTickets} ticket
+              {availableTickets > 1 ? "s are" : " is"} available.
             </div>
           )}
         </div>
@@ -147,81 +149,94 @@ export const CollectionView = () => {
     );
   };
   return (
-    <div className="bg-gray-900 w-screen h-screen flex items-center justify-center">
-      <div className="bg-white overflow-hidden sm:rounded-lg sm:shadow">
-        <div className="bg-white px-4 py-5 border-b border-gray-200 sm:px-6 w-[480px]">
-          <h3 className="text-lg leading-6 font-medium text-gray-900 flex items-center">
-            {collection.name}
-            <img
-              src={verifiedIconSrc}
-              alt="Ticket Collection Verified"
-              className="w-4 h-4 ml-2"
-            />
-          </h3>
+    <div className="bg-gray-900 w-screen h-screen flex items-center justify-center overflow-scroll">
+      <div>
+        <div className="mb-4">
+          <Link to="/" className="text-white flex items-center">
+            <ChevronLeftIcon className="h-5 w-5" />
+            Back to Collections
+          </Link>
         </div>
-        <div
-          className="bg-cover w-full h-32 bg-center"
-          style={{
-            backgroundImage: `url(${ipfsGatewaySrc(collection.cover_image)})`,
-          }}
-        ></div>
-        <div className="p-8 border-b border-gray-200">
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">Location</dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {collection.location}
-              </dd>
-            </div>
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500 text-right">
-                Date / Time
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 text-right">
-                {formatTicketDate(collection.datetime.toNumber())}
-              </dd>
-            </div>
-          </dl>
-        </div>
-        <div className="p-8 border-b border-gray-200">
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">Supply</dt>
-              <dd className="mt-1 text-sm text-gray-900 ">
-                {supply} / {maxSupply}
-              </dd>
-            </div>
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500 text-right">
-                Ticket Type
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 text-right">
-                Admit One
-              </dd>
-            </div>
-          </dl>
-        </div>
-        <div className="p-8 flex justify-between w-full border-b border-gray-300">
-          {renderPurchaseOptions()}
-        </div>
-        {!soldOut && (
-          <div className="p-4">
-            <button
-              onClick={() => purchase()}
-              disabled={isPurchasing || !!exceededSupply}
-              className="flex justify-center items-center w-full bg-blue-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-blue-500 disabled:bg-blue-300"
-            >
-              {isPurchasing ? (
-                <>
-                  Confirming...
-                  <div className="button-spinner ml-2">Loading...</div>
-                </>
-              ) : (
-                <>Confirm order</>
+        <div className="bg-white overflow-hidden sm:rounded-lg sm:shadow">
+          <div className="bg-white px-4 py-5 border-b border-gray-200 sm:px-6 w-[480px] flex justify-between">
+            <h3 className="text-lg leading-6 font-medium text-gray-900 flex items-center">
+              {collection.name}
+              {collection.verified && (
+                <img
+                  src={verifiedIconSrc}
+                  alt="Ticket Collection Verified"
+                  className="w-4 h-4 ml-2"
+                />
               )}
-            </button>
+            </h3>
+            <div>
+              <CollectionAdminOptions collection={collection} />
+            </div>
           </div>
-        )}
+          <div
+            className="bg-cover w-full h-32 bg-center"
+            style={{
+              backgroundImage: `url(${ipfsGatewaySrc(collection.cover_image)})`,
+            }}
+          ></div>
+          <div className="p-8 border-b border-gray-200">
+            <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+              <div className="sm:col-span-1">
+                <dt className="text-sm font-medium text-gray-500">Location</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {collection.location}
+                </dd>
+              </div>
+              <div className="sm:col-span-1">
+                <dt className="text-sm font-medium text-gray-500 text-right">
+                  Date / Time
+                </dt>
+                <dd className="mt-1 text-sm text-gray-900 text-right">
+                  {formatTicketDate(collection.datetime.toNumber())}
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <div className="p-8 border-b border-gray-200">
+            <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+              <div className="sm:col-span-1">
+                <dt className="text-sm font-medium text-gray-500">Supply</dt>
+                <dd className="mt-1 text-sm text-gray-900 ">
+                  {supply} / {maxSupply}
+                </dd>
+              </div>
+              <div className="sm:col-span-1">
+                <dt className="text-sm font-medium text-gray-500 text-right">
+                  Ticket Type
+                </dt>
+                <dd className="mt-1 text-sm text-gray-900 text-right">
+                  {getTicketTypeLabel(collection.ticket_type)}
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <div className="p-8 flex justify-between w-full border-b border-gray-300">
+            {renderPurchaseOptions()}
+          </div>
+          {!soldOut && (
+            <div className="p-4">
+              <button
+                onClick={() => purchase()}
+                disabled={isPurchasing || !!exceededSupply}
+                className="flex justify-center items-center w-full bg-blue-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-blue-500 disabled:bg-blue-300"
+              >
+                {isPurchasing ? (
+                  <>
+                    Confirming...
+                    <div className="button-spinner ml-2">Loading...</div>
+                  </>
+                ) : (
+                  <>Confirm order</>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

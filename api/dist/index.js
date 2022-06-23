@@ -47,6 +47,7 @@ const verifySignature_1 = require("./utils/verifySignature");
 const generateSignaturePayloadBytes_1 = require("./utils/generateSignaturePayloadBytes");
 const getLoggerUser_1 = require("./utils/getLoggerUser");
 const checkTokenOwnership_1 = require("./utils/checkTokenOwnership");
+const tezos_1 = require("./tezos");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use(express_1.default.json({ limit: '10mb' }));
@@ -73,6 +74,10 @@ apiRouter.get('/collections', (req, res) => __awaiter(void 0, void 0, void 0, fu
             max_supply: true,
             supply: true,
             balance_mutez: true,
+            ticket_type: true,
+            verified: true,
+        }, orderBy: {
+            datetime: 'asc',
         } }));
     const count = yield db_1.prisma.ticketCollection.count();
     res.json({ data, count });
@@ -88,7 +93,11 @@ apiRouter.get('/ticket-tokens', (req, res) => __awaiter(void 0, void 0, void 0, 
     if (owner_address) {
         where.owner_address = owner_address;
     }
-    const data = yield db_1.prisma.ticketTokens.findMany(Object.assign(Object.assign({}, (0, paginate_1.getPaginationParams)(req)), { where, select: {
+    const data = yield db_1.prisma.ticketTokens.findMany(Object.assign(Object.assign({}, (0, paginate_1.getPaginationParams)(req)), { where, orderBy: {
+            collection: {
+                datetime: 'asc',
+            }
+        }, select: {
             token_id: true,
             name: true,
             collection: {
@@ -103,6 +112,8 @@ apiRouter.get('/ticket-tokens', (req, res) => __awaiter(void 0, void 0, void 0, 
                     location: true,
                     supply: true,
                     balance_mutez: true,
+                    ticket_type: true,
+                    verified: true,
                 }
             }
         } }));
@@ -236,6 +247,81 @@ apiRouter.post('/issue-ticket-token', (req, res) => __awaiter(void 0, void 0, vo
         }
     });
     return res.json({ token });
+}));
+apiRouter.post('/gate-scan-verify', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const loggedUserAddress = yield (0, getLoggerUser_1.getLoggerUserAddress)(req);
+    if (!loggedUserAddress) {
+        return res.sendStatus(401);
+    }
+    const { token, ticket_collection_id } = req.body;
+    const ticketAccessToken = yield db_1.prisma.ticketAccessToken.findUnique({
+        where: {
+            token,
+        },
+    });
+    if (!ticketAccessToken) {
+        return res.json({
+            authorized: false,
+            reason: 'Token not found',
+        });
+    }
+    const ticket = yield db_1.prisma.ticketTokens.findUnique({
+        where: {
+            token_id: ticketAccessToken.ticket_token_id,
+        },
+        include: {
+            collection: true,
+        }
+    });
+    if (!ticket) {
+        return res.json({
+            authorized: false,
+            reason: 'Could not find ticket',
+        });
+    }
+    if (ticket.collection.owner !== loggedUserAddress) {
+        return res.sendStatus(403);
+    }
+    if (ticket.collection.ticket_collection_id !== ticket_collection_id) {
+        return res.json({
+            authorized: false,
+            reason: 'Unrecognized ticket for this collection',
+        });
+    }
+    const { ticket_token_id } = ticketAccessToken;
+    const gateScanConfirmationCount = yield db_1.prisma.gateScanConfirmation.count({
+        where: {
+            ticket_token_id: ticket_token_id,
+        }
+    });
+    if (ticket.collection.ticket_type === 'ADMIT_ONE' && gateScanConfirmationCount > 0) {
+        return res.json({
+            authorized: false,
+            reason: `Ticket #${ticket_token_id} already used`,
+        });
+    }
+    // Verify On-Chain Ownership
+    const contract = yield (0, tezos_1.getContract)();
+    const s = yield contract.storage();
+    const onChainOwnerAddress = yield s.ledger.get(ticket_token_id);
+    if (onChainOwnerAddress !== ticketAccessToken.owner_address) {
+        return res.json({
+            authorized: false,
+            reason: 'Ownership verification failed',
+        });
+    }
+    // Create Gate Scan Confirmation
+    yield db_1.prisma.gateScanConfirmation.create({
+        data: {
+            address: onChainOwnerAddress,
+            ticket_token_id: ticketAccessToken.ticket_token_id,
+            entry_at: new Date(),
+        }
+    });
+    return res.json({
+        authorized: true,
+        token_id: ticket.token_id,
+    });
 }));
 app.use('/api', apiRouter);
 app.listen(port, () => {
