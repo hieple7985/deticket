@@ -1,13 +1,13 @@
-version: '3.9'
+version: '2.2'
 
 services:
   postgres:
     container_name: deticket_postgres_container
     image: postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DATABASE: quepasa
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: deticket
       POSTGRESQL_FSYNC: "off"
       PGDATA: /data/postgres
     volumes:
@@ -22,14 +22,14 @@ services:
     container_name: deticket_pgadmin_container
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     volumes:
        - pgadmin:/root/.pgadmin
 
     ports:
-      - "${PGADMIN_PORT:-5050}:80"
+      - "5050:80"
     networks:
       - postgres
     restart: unless-stopped
