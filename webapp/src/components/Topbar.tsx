@@ -102,13 +102,15 @@ export const Topbar = () => {
                   <BellIcon className="h-6 w-6" aria-hidden="true" />
                 </button> */}
 
-                <button
-                  onClick={() => setCreateCollectionOpen(true)}
-                  className="mr-2 flex items-center bg-[rgba(255,255,255,0.1)] py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-[rgba(255,255,255,0.15)]"
-                >
-                  <PlusIcon className="h-5 w-5 mr-2" />
-                  Create Collection
-                </button>
+                {activeAccount && (
+                  <button
+                    onClick={() => setCreateCollectionOpen(true)}
+                    className="mr-2 flex items-center bg-[rgba(255,255,255,0.1)] py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-[rgba(255,255,255,0.15)]"
+                  >
+                    <PlusIcon className="h-5 w-5 mr-2" />
+                    Create Collection
+                  </button>
+                )}
 
                 {/* Profile dropdown */}
                 <Menu as="div" className="ml-3 relative">

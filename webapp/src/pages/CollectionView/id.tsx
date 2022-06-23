@@ -10,14 +10,18 @@ import { formatTicketDate } from "../../utils/date";
 import { ChevronLeftIcon, ExclamationIcon } from "@heroicons/react/outline";
 import { getTicketTypeLabel } from "../../utils/ticket";
 import { CollectionAdminOptions } from "../../components/CollectionAdminOptions";
+import { OnboardingModal } from "../../components/OnboardingModal";
+import { useWallet } from "@tezos-contrib/react-wallet-provider";
 
 export const CollectionView = () => {
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState("1");
   const [supply, setSupply] = useState<null | number>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
   const { collectionId } = useParams();
   const contract = useDeTicketContract();
+  const { activeAccount } = useWallet()
 
   const quantityInt = parseInt(quantity);
   const { collection } = useCollection({
@@ -42,6 +46,10 @@ export const CollectionView = () => {
   const maxSupply = collection.max_supply.toNumber();
   // console.log(collection.purchase_amount_mutez)
   const purchase = async () => {
+    if (!activeAccount) {
+      setOnboardingOpen(true);
+      return;
+    }
     setIsPurchasing(true);
     try {
       const res = await contract?.methods
@@ -150,6 +158,15 @@ export const CollectionView = () => {
   };
   return (
     <div className="bg-gray-900 w-screen h-screen flex items-center justify-center overflow-scroll">
+      <OnboardingModal
+        open={onboardingOpen}
+        setOpen={setOnboardingOpen}
+        amount={total}
+        onCompleted={() => {
+          setOnboardingOpen(false)
+          purchase()
+        }}
+      />
       <div>
         <div className="mb-4">
           <Link to="/" className="text-white flex items-center">

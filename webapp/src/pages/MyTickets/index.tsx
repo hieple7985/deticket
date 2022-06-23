@@ -24,7 +24,7 @@ export const MyTickets = () => {
     <div className="bg-slate-100 w-screen h-screen">
       <Topbar />
       <div className="relative max-w-7xl mx-auto">
-        <div className="mt-8 max-w-lg mx-auto grid gap-5 lg:grid-cols-3 lg:max-w-none">
+        <div className="mt-8 max-w-lg mx-auto grid gap-5 lg:grid-cols-3 lg:max-w-none p-8">
           {ticketTokens.map((ticketToken: any) => (
             <TicketTokenListingItem
               ticketToken={ticketToken}

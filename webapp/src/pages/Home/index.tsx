@@ -15,7 +15,7 @@ export const HomeIndex = () => {
     <div className="bg-slate-100 w-screen h-screen">
       <Topbar />
       <div className="relative max-w-7xl mx-auto">
-        <div className="mt-8 max-w-lg mx-auto grid gap-5 lg:grid-cols-3 lg:max-w-none">
+        <div className="mt-8 max-w-lg mx-auto grid gap-5 lg:grid-cols-3 lg:max-w-none p-8">
           {collections.map((collection: any) => (
             <CollectionListingItem collection={collection} refetch={refetch} />
           ))}

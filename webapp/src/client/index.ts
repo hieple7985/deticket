@@ -7,7 +7,7 @@ import axios from "axios";
 export const queryClient = new QueryClient()
 
 export const client =  axios.create({
-  baseURL: "/api",
+  baseURL: process.env.REACT_APP_API_BASE_URL || "/api",
   headers: {
     "Content-type": "application/json"
   }
