@@ -182,10 +182,10 @@ export const startTezosWatcher = () => {
   syncNewTokens()
   console.log(colors.cyan('Tezos Smart Contract watcher started!'))
   console.log(colors.cyan(`Listening for contract transactions... (contract=${CONTRACT_ADDRESS})`))
-  tezos.setStreamProvider(tezos.getFactory(PollingSubscribeProvider)({
-    shouldObservableSubscriptionRetry: true,
-    pollingIntervalMilliseconds: 5000,
-  }));
+  // tezos.setStreamProvider(tezos.getFactory(PollingSubscribeProvider)({
+  //   shouldObservableSubscriptionRetry: true,
+  //   pollingIntervalMilliseconds: 5000,
+  // }));
   const sub = tezos.stream.subscribeOperation({ destination: CONTRACT_ADDRESS || '' })
 
   sub.on('data', (async (data) => {
