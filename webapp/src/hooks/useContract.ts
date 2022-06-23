@@ -2,8 +2,7 @@ import { ContractAbstraction, ContractMethod, TezosToolkit, Wallet } from "@taqu
 import { useEffect, useState } from "react";
 import { useTezos } from "./useTezos";
 
-// TODO: Make contract address configurable
-const CONTRACT_ADDRESS = 'KT1GUHb2PJsWATBsbmTxZjZ9bNgzhAySCTfF'
+const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS!
 
 
 type DefaultMethods = Record<string, (...args: any[]) => ContractMethod<Wallet>>
