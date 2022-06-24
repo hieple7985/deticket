@@ -7,6 +7,7 @@ This project was created for the "User-Friendly NFT Ticketing System For Cultura
 - [📹 Video Presentation](https://youtu.be/Jv7PwvFp6Ms)
 - [📕 Technical Overview Presentation PDF](https://github.com/strandgeek/deticket/raw/main/presentation/deTicket%20Presentation.pdf)
 - [⚡️Demo](https://deticket.strandgeek.com/)
+- [📄 Smart Contract](https://better-call.dev/ithacanet/KT1GUHb2PJsWATBsbmTxZjZ9bNgzhAySCTfF)
 
 ## Tech Stack
 - Tezos Blockchain
