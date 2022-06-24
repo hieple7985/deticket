@@ -1,13 +1,12 @@
 # deTicket - Decentralized Tickets
 
 
+## About
+This project was created for the "User-Friendly NFT Ticketing System For Cultural Institutions" hackathon sponsored by Tezos.
+
 - [📹 Video Presentation](https://youtu.be/Jv7PwvFp6Ms)
 - [📕 Technical Overview Presentation PDF](https://github.com/strandgeek/deticket/raw/main/presentation/deTicket%20Presentation.pdf)
 - [⚡️Demo](https://deticket.strandgeek.com/)
-
-
-## About
-This project was created for the "User-Friendly NFT Ticketing System For Cultural Institutions" hackathon sponsored by Tezos.
 
 ## Tech Stack
 - Tezos Blockchain
