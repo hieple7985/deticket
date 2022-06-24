@@ -66,7 +66,7 @@ model TicketAccessToken {
 
 model GateScanConfirmation {
   id              String   @id @default(uuid())
-  ticket_token_id Int      @unique
+  ticket_token_id Int
   address         String
   entry_at        DateTime
 }
